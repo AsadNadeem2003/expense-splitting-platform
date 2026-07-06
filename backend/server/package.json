@@ -1,0 +1,14 @@
+{
+  "name": "expense-splitting-platform",
+  "version": "1.0.0",
+  "description": "A platform for splitting expenses among groups",
+  "main": "src/index.js",
+  "scripts": {
+    "start": "node src/index.js",
+    "dev": "nodemon src/index.js"
+  },
+  "keywords": ["expenses", "splitting", "groups"],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {}
+}
