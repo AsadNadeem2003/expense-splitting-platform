@@ -1,0 +1,152 @@
+// Prisma database schema
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id            Int      @id @default(autoincrement())
+  name          String
+  email         String   @unique
+  passwordHash  String
+  createdAt     DateTime @default(now())
+
+  groupMemberships   GroupMember[]
+  pendingRequests    PendingJoinRequest[]
+  paidExpenses       Expense[]            @relation("PaidBy")
+  participations     ExpenseParticipant[]
+  expensePayers      ExpensePayer[]
+  editHistories      ExpenseEditHistory[] @relation("EditedBy")
+  settlementsPaid    Settlement[]         @relation("SettlementPayer")
+  settlementsReceived Settlement[]        @relation("SettlementPayee")
+}
+
+model Group {
+  id          Int      @id @default(autoincrement())
+  name        String
+  inviteCode  String   @unique   // e.g. ROOM88
+  createdById Int
+  createdAt   DateTime @default(now())
+
+  members         GroupMember[]
+  pendingRequests PendingJoinRequest[]
+  expenses        Expense[]
+  settlements     Settlement[]
+}
+
+model GroupMember {
+  id       Int      @id @default(autoincrement())
+  groupId  Int
+  userId   Int
+  role     Role     @default(MEMBER)
+  joinedAt DateTime @default(now())
+
+  group Group @relation(fields: [groupId], references: [id])
+  user  User  @relation(fields: [userId], references: [id])
+
+  @@unique([groupId, userId])
+}
+
+enum Role {
+  ADMIN
+  MEMBER
+}
+
+model PendingJoinRequest {
+  id        Int        @id @default(autoincrement())
+  groupId   Int
+  userId    Int
+  status    JoinStatus @default(PENDING)
+  createdAt DateTime   @default(now())
+
+  group Group @relation(fields: [groupId], references: [id])
+  user  User  @relation(fields: [userId], references: [id])
+
+  @@unique([groupId, userId])
+}
+
+enum JoinStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+model Expense {
+  id           Int      @id @default(autoincrement())
+  groupId      Int
+  description  String
+  totalAmount  Int      // stored in PAISA
+  paidById     Int      // primary payer (for single-payer case)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  group        Group    @relation(fields: [groupId], references: [id])
+  paidBy       User     @relation("PaidBy", fields: [paidById], references: [id])
+  participants ExpenseParticipant[]
+  payers       ExpensePayer[]
+  editHistory  ExpenseEditHistory[]
+}
+
+// Supports multi-payer bills
+model ExpensePayer {
+  id         Int    @id @default(autoincrement())
+  expenseId  Int
+  userId     Int
+  amountPaid Int    // paisa
+
+  expense Expense @relation(fields: [expenseId], references: [id])
+  user    User    @relation(fields: [userId], references: [id])
+
+  @@unique([expenseId, userId])
+}
+
+model ExpenseParticipant {
+  id         Int    @id @default(autoincrement())
+  expenseId  Int
+  userId     Int
+  shareAmount Int   // paisa — this participant's owed share
+
+  expense Expense @relation(fields: [expenseId], references: [id])
+  user    User    @relation(fields: [userId], references: [id])
+
+  @@unique([expenseId, userId])
+}
+
+model ExpenseEditHistory {
+  id         Int      @id @default(autoincrement())
+  expenseId  Int
+  editedById Int
+  changeType String   // e.g. "PARTICIPANT_REMOVED", "AMOUNT_CHANGED"
+  oldValue   Json
+  newValue   Json
+  createdAt  DateTime @default(now())
+
+  expense  Expense @relation(fields: [expenseId], references: [id])
+  editedBy User    @relation("EditedBy", fields: [editedById], references: [id])
+}
+
+model Settlement {
+  id            Int              @id @default(autoincrement())
+  groupId       Int
+  payerId       Int              // person who owes / is paying
+  payeeId       Int              // person receiving
+  amount        Int              // paisa
+  screenshotUrl String?
+  status        SettlementStatus @default(AWAITING_VERIFICATION)
+  createdAt     DateTime         @default(now())
+  confirmedAt   DateTime?
+
+  group  Group @relation(fields: [groupId], references: [id])
+  payer  User  @relation("SettlementPayer", fields: [payerId], references: [id])
+  payee  User  @relation("SettlementPayee", fields: [payeeId], references: [id])
+}
+
+enum SettlementStatus {
+  AWAITING_VERIFICATION
+  CONFIRMED
+  REJECTED
+}
