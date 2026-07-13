@@ -1,0 +1,28 @@
+{
+  "name": "expense-splitting-platform",
+  "version": "1.0.0",
+  "description": "Full-stack expense splitting app",
+  "main": "index.js",
+  "scripts": {
+    "dev": "concurrently \"npm run dev:server\" \"npm run dev:frontend\"",
+    "dev:server": "npm run dev --prefix server",
+    "dev:frontend": "npm run dev --prefix frontend",
+    "install:all": "npm install && npm install --prefix server && npm install --prefix frontend",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AsadNadeem2003/expense-splitting-platform.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/AsadNadeem2003/expense-splitting-platform/issues"
+  },
+  "homepage": "https://github.com/AsadNadeem2003/expense-splitting-platform#readme",
+  "devDependencies": {
+    "concurrently": "^10.0.3"
+  }
+}
