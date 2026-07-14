@@ -56,6 +56,8 @@ enum Role {
   MEMBER
 }
 
+
+
 model PendingJoinRequest {
   id        Int        @id @default(autoincrement())
   groupId   Int
@@ -150,3 +152,4 @@ enum SettlementStatus {
   CONFIRMED
   REJECTED
 }
+

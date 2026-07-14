@@ -1,26 +1,30 @@
-import React from 'react';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import AppLayout from './components/layout/AppLayout';
+import ProtectedRoute from './components/layout/ProtectedRoute';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
+import { AuthProvider } from './context/AuthContext';
+
+import GroupsList from './pages/GroupsList';
+import GroupDetails from './pages/GroupDetails';
 
 function App() {
-  // Simple auth check stub. Will be replaced by real context.
-  const isAuthenticated = true; 
-
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/login" element={<Login />} />
-        
-        <Route path="/" element={
-          isAuthenticated ? <AppLayout /> : <Navigate to="/login" />
-        }>
-          <Route index element={<Dashboard />} />
-          {/* Add more routes like groups, friends, settings here */}
-        </Route>
-      </Routes>
-    </BrowserRouter>
+    <AuthProvider>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          
+          <Route element={<ProtectedRoute />}>
+            <Route path="/" element={<AppLayout />}>
+              <Route index element={<Dashboard />} />
+              <Route path="groups" element={<GroupsList />} />
+              <Route path="groups/:groupId" element={<GroupDetails />} />
+            </Route>
+          </Route>
+        </Routes>
+      </BrowserRouter>
+    </AuthProvider>
   );
 }
 

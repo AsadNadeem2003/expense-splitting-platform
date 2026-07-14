@@ -1,9 +1,29 @@
-import React from 'react';
-import { Outlet, NavLink } from 'react-router-dom';
+import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { LayoutDashboard, Users, CreditCard, Settings, LogOut } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
 import './AppLayout.css';
 
 const AppLayout = () => {
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const handleLogout = () => {
+    logout();
+    navigate('/login');
+  };
+
+  let pageTitle = 'Dashboard';
+  if (location.pathname.startsWith('/groups')) {
+    pageTitle = 'Groups';
+  } else if (location.pathname.startsWith('/activity')) {
+    pageTitle = 'Activity';
+  } else if (location.pathname.startsWith('/settings')) {
+    pageTitle = 'Settings';
+  }
+
+  const showNewExpenseBtn = location.pathname === '/';
+
   return (
     <div className="layout-container">
       {/* Sidebar */}
@@ -36,13 +56,13 @@ const AppLayout = () => {
 
         <div className="sidebar-footer">
           <div className="user-profile">
-            <div className="avatar">U</div>
+            <div className="avatar">{user?.name ? user.name.charAt(0).toUpperCase() : 'U'}</div>
             <div className="user-info">
-              <span className="user-name">User Name</span>
-              <span className="user-email text-xs text-muted">user@example.com</span>
+              <span className="user-name">{user?.name || 'User Name'}</span>
+              <span className="user-email text-xs text-muted">{user?.email || 'user@example.com'}</span>
             </div>
           </div>
-          <button className="logout-btn">
+          <button className="logout-btn" onClick={handleLogout}>
             <LogOut size={18} />
           </button>
         </div>
@@ -51,10 +71,12 @@ const AppLayout = () => {
       {/* Main Content */}
       <main className="main-content">
         <header className="topbar">
-          <h2 className="page-title">Dashboard</h2>
-          <div className="topbar-actions">
-            <button className="btn btn-primary text-sm">+ New Expense</button>
-          </div>
+          <h2 className="page-title">{pageTitle}</h2>
+          {showNewExpenseBtn && (
+            <div className="topbar-actions">
+              <button className="btn btn-primary text-sm">+ New Expense</button>
+            </div>
+          )}
         </header>
         <div className="content-area">
           <Outlet />
