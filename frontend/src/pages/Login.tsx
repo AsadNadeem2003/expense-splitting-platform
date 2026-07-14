@@ -1,17 +1,40 @@
-import React, { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { LogIn, UserPlus } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
 import './Login.css';
 
 const Login = () => {
   const [isLogin, setIsLogin] = useState(true);
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  
   const navigate = useNavigate();
+  const { login, register, isAuthenticated } = useAuth();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // If already authenticated, redirect to home
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate('/');
+    }
+  }, [isAuthenticated, navigate]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Simulate auth success
-    navigate('/');
+    setError('');
+    try {
+      if (isLogin) {
+        await login(email, password);
+      } else {
+        await register(name, email, password);
+      }
+      navigate('/');
+    } catch (err: any) {
+      setError(err.response?.data?.message || err.message || 'Authentication failed');
+    }
   };
 
   return (
@@ -34,22 +57,45 @@ const Login = () => {
           </p>
         </div>
 
+        {error && <div className="text-red-500 bg-red-500/10 p-3 rounded-md mb-4 text-sm text-center border border-red-500/20">{error}</div>}
+
         <form onSubmit={handleSubmit} className="login-form">
           {!isLogin && (
             <div className="input-group">
               <label className="input-label">Full Name</label>
-              <input type="text" className="input-field" placeholder="John Doe" required />
+              <input 
+                type="text" 
+                className="input-field" 
+                placeholder="John Doe" 
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                required={!isLogin} 
+              />
             </div>
           )}
           
           <div className="input-group">
             <label className="input-label">Email Address</label>
-            <input type="email" className="input-field" placeholder="you@example.com" required />
+            <input 
+              type="email" 
+              className="input-field" 
+              placeholder="you@example.com" 
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required 
+            />
           </div>
           
           <div className="input-group">
             <label className="input-label">Password</label>
-            <input type="password" className="input-field" placeholder="••••••••" required />
+            <input 
+              type="password" 
+              className="input-field" 
+              placeholder="••••••••" 
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required 
+            />
           </div>
 
           <button type="submit" className="btn btn-primary w-full mt-4 py-3">
@@ -62,8 +108,12 @@ const Login = () => {
           <p className="text-sm text-secondary">
             {isLogin ? "Don't have an account? " : "Already have an account? "}
             <button 
+              type="button"
               className="text-primary hover-underline font-medium"
-              onClick={() => setIsLogin(!isLogin)}
+              onClick={() => {
+                setIsLogin(!isLogin);
+                setError('');
+              }}
             >
               {isLogin ? 'Sign up' : 'Sign in'}
             </button>
