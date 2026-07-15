@@ -15,3 +15,8 @@ export const getExpenseDetails = async (expenseId: number) => {
   const response = await apiClient.get<{ status: string; data: Expense }>(`/expenses/${expenseId}`);
   return response.data.data;
 };
+
+export const updateExpense = async (expenseId: number, data: any) => {
+  const response = await apiClient.patch<{ status: string; data: Expense }>(`/expenses/${expenseId}`, data);
+  return response.data.data;
+};

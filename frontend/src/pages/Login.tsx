@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { LogIn, UserPlus } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { joinGroup } from '../api/groups';
 import './Login.css';
 
 const Login = () => {
@@ -13,6 +14,7 @@ const Login = () => {
   const [error, setError] = useState('');
   
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { login, register, isAuthenticated } = useAuth();
 
   // If already authenticated, redirect to home
@@ -31,6 +33,17 @@ const Login = () => {
       } else {
         await register(name, email, password);
       }
+      
+      const inviteCode = searchParams.get('inviteCode');
+      if (inviteCode) {
+        try {
+          await joinGroup(inviteCode);
+        } catch (joinErr) {
+          console.error("Failed to auto-join group:", joinErr);
+          // Proceed to dashboard anyway
+        }
+      }
+      
       navigate('/');
     } catch (err: any) {
       setError(err.response?.data?.message || err.message || 'Authentication failed');

@@ -35,3 +35,18 @@ export const rejectJoinRequest = async (groupId: number, requestId: number) => {
   const response = await apiClient.post(`/groups/${groupId}/reject/${requestId}`);
   return response.data;
 };
+
+export const inviteUser = async (groupId: number, email: string) => {
+  const response = await apiClient.post(`/groups/${groupId}/invite`, { email });
+  return response.data;
+};
+
+export const removeMember = async (groupId: number, userId: number) => {
+  const response = await apiClient.delete(`/groups/${groupId}/members/${userId}`);
+  return response.data;
+};
+
+export const leaveGroup = async (groupId: number) => {
+  const response = await apiClient.delete(`/groups/${groupId}/leave`);
+  return response.data;
+};

@@ -59,29 +59,86 @@ export const updateExpense = async (userId: number, expenseId: number, data: Upd
   if (!expense) throw new Error('Expense not found');
   if (expense.groupId !== data.groupId) throw new Error('Expense does not belong to this group');
 
-  // Verify payer or admin (skipping full admin check here for brevity, assume payer or involved can edit)
+  // Compute new total, participants, payers
+  const totalPaisa = rupeeToPaisa(data.totalAmount || (expense.totalAmount / 100));
+  
+  let newParticipants = expense.participants;
+  if (data.participants) {
+    newParticipants = data.participants.map(p => ({
+      ...p,
+      shareAmount: rupeeToPaisa(p.shareAmount),
+      id: 0, expenseId: 0
+    }));
+    const sumShares = newParticipants.reduce((acc, p) => acc + p.shareAmount, 0);
+    if (Math.abs(sumShares - totalPaisa) > 1) {
+      throw new Error(`Sum of shares (${sumShares}) does not equal total amount (${totalPaisa})`);
+    }
+  }
+
+  let newPayers = expense.payers;
+  let primaryPayerId = expense.paidById;
+  if (data.payers) {
+    newPayers = data.payers.map(p => ({
+      ...p,
+      amountPaid: rupeeToPaisa(p.amountPaid),
+      id: 0, expenseId: 0
+    }));
+    const sumPaid = newPayers.reduce((acc, p) => acc + p.amountPaid, 0);
+    if (Math.abs(sumPaid - totalPaisa) > 1) {
+      throw new Error(`Sum of paid amounts (${sumPaid}) does not equal total amount (${totalPaisa})`);
+    }
+    primaryPayerId = newPayers.sort((a, b) => b.amountPaid - a.amountPaid)[0].userId;
+  }
 
   return prisma.$transaction(async (tx) => {
-    // We would do full diffing here. For simplicity, just update description if provided
-    if (data.description) {
-      await tx.expense.update({
-        where: { id: expenseId },
-        data: { description: data.description }
-      });
-      
-      await tx.expenseEditHistory.create({
-        data: {
-          expenseId,
-          editedById: userId,
-          changeType: 'DESCRIPTION_CHANGED',
-          oldValue: { description: expense.description },
-          newValue: { description: data.description }
+    // Log the edit
+    const changeType = data.participants || data.payers ? 'FULL_EDIT' : 'DESCRIPTION_CHANGED';
+    
+    await tx.expenseEditHistory.create({
+      data: {
+        expenseId,
+        editedById: userId,
+        changeType,
+        oldValue: { 
+          description: expense.description, 
+          totalAmount: expense.totalAmount,
+          participants: expense.participants,
+          payers: expense.payers
+        },
+        newValue: { 
+          description: data.description || expense.description,
+          totalAmount: totalPaisa,
+          participants: data.participants ? newParticipants : expense.participants,
+          payers: data.payers ? newPayers : expense.payers
         }
+      }
+    });
+
+    // Delete old relationships if they are changing
+    if (data.participants) {
+      await tx.expenseParticipant.deleteMany({ where: { expenseId } });
+      await tx.expenseParticipant.createMany({
+        data: newParticipants.map(p => ({ expenseId, userId: p.userId, shareAmount: p.shareAmount }))
       });
     }
 
-    // In a complete implementation, handle complex updates of participants/payers here.
-    
+    if (data.payers) {
+      await tx.expensePayer.deleteMany({ where: { expenseId } });
+      await tx.expensePayer.createMany({
+        data: newPayers.map(p => ({ expenseId, userId: p.userId, amountPaid: p.amountPaid }))
+      });
+    }
+
+    // Update expense itself
+    await tx.expense.update({
+      where: { id: expenseId },
+      data: { 
+        description: data.description || expense.description,
+        totalAmount: totalPaisa,
+        paidById: primaryPayerId
+      }
+    });
+
     return tx.expense.findUnique({ where: { id: expenseId }, include: { participants: true, payers: true } });
   });
 };
@@ -89,7 +146,14 @@ export const updateExpense = async (userId: number, expenseId: number, data: Upd
 export const getExpense = async (expenseId: number) => {
   return prisma.expense.findUnique({
     where: { id: expenseId },
-    include: { participants: true, payers: true, editHistory: true }
+    include: { 
+      participants: { include: { user: { select: { id: true, name: true } } } }, 
+      payers: { include: { user: { select: { id: true, name: true } } } }, 
+      editHistory: { 
+        include: { editedBy: { select: { id: true, name: true } } },
+        orderBy: { createdAt: 'desc' }
+      } 
+    }
   });
 };
 

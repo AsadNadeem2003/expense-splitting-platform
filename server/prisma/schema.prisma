@@ -13,7 +13,9 @@ model User {
   name          String
   email         String   @unique
   passwordHash  String
-  createdAt     DateTime @default(now())
+  createdAt       DateTime @default(now())
+  defaultCurrency String   @default("Rs.")
+  paymentMethod   String?
 
   groupMemberships   GroupMember[]
   pendingRequests    PendingJoinRequest[]

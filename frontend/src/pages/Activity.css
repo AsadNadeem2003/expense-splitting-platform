@@ -1,0 +1,126 @@
+.activity-container {
+  padding: 2rem;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.activity-loading, .activity-error {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 400px;
+  color: var(--text-muted);
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 5rem 2rem;
+  text-align: center;
+  color: var(--text-muted);
+  background: var(--card-bg);
+  border-radius: 16px;
+  border: 1px solid var(--border-color);
+}
+
+.empty-state h3 {
+  margin: 1.5rem 0 0.5rem;
+  color: var(--text-primary);
+  font-size: 1.5rem;
+}
+
+.activity-timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.activity-card {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  background: var(--card-bg);
+  padding: 1.5rem;
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.activity-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+}
+
+.activity-icon {
+  width: 50px;
+  height: 50px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.activity-card.expense .activity-icon {
+  background: rgba(108, 92, 231, 0.15);
+  color: var(--primary-accent);
+}
+
+.activity-card.settlement .activity-icon {
+  background: rgba(46, 204, 113, 0.15);
+  color: #2ecc71;
+}
+
+.activity-details {
+  flex: 1;
+}
+
+.activity-details h4 {
+  margin: 0 0 0.25rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+}
+
+.meta-text {
+  margin: 0 0 0.5rem;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+.action-text {
+  margin: 0;
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+}
+
+.activity-amount {
+  text-align: right;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.25rem;
+}
+
+.activity-amount .positive {
+  color: #2ecc71;
+  font-weight: 700;
+  font-size: 1.2rem;
+}
+
+.activity-amount .negative {
+  color: #e74c3c;
+  font-weight: 700;
+  font-size: 1.2rem;
+}
+
+.activity-amount .neutral {
+  color: var(--text-muted);
+  font-weight: 700;
+  font-size: 1.2rem;
+}
+
+.total-amount {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}

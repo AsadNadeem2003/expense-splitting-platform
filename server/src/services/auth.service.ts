@@ -4,7 +4,8 @@ import { generateAccessToken, generateRefreshToken } from '../utils/jwt';
 import { RegisterInput, LoginInput } from '../validators/auth.schema';
 
 export const registerUser = async ({ name, email, password }: RegisterInput) => {
-  const existingUser = await prisma.user.findUnique({ where: { email } });
+  const normalizedEmail = email.toLowerCase().trim();
+  const existingUser = await prisma.user.findUnique({ where: { email: normalizedEmail } });
   if (existingUser) {
     throw new Error('An account with this email already exists.');
   }
@@ -15,7 +16,7 @@ export const registerUser = async ({ name, email, password }: RegisterInput) => 
   const newUser = await prisma.user.create({
     data: {
       name,
-      email,
+      email: normalizedEmail,
       passwordHash,
     },
   });
@@ -31,7 +32,8 @@ export const registerUser = async ({ name, email, password }: RegisterInput) => 
 };
 
 export const loginUser = async ({ email, password }: LoginInput) => {
-  const user = await prisma.user.findUnique({ where: { email } });
+  const normalizedEmail = email.toLowerCase().trim();
+  const user = await prisma.user.findUnique({ where: { email: normalizedEmail } });
   if (!user) {
     throw new Error('Invalid email or password credentials.');
   }
