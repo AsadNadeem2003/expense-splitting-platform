@@ -12,8 +12,7 @@ export const createSettlement = async (payerId: number, data: CreateSettlementIn
       payeeId: data.payeeId,
       amount: amountPaisa,
       screenshotUrl: filePath,
-      status: 'CONFIRMED', // auto-confirming for MVP flow so balances update instantly
-      confirmedAt: new Date()
+      status: 'AWAITING_VERIFICATION', // Payment is now pending payee confirmation
     }
   });
 };

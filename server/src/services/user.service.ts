@@ -97,3 +97,125 @@ export const getDashboardStats = async (userId: number) => {
     recentActivity
   };
 };
+
+export const searchUsers = async (query: string) => {
+  const whereClause = query ? {
+    OR: [
+      { name: { contains: query, mode: 'insensitive' as any } },
+      { email: { contains: query, mode: 'insensitive' as any } }
+    ]
+  } : {};
+
+  return prisma.user.findMany({
+    where: whereClause,
+    select: {
+      id: true,
+      name: true,
+      email: true
+    },
+    take: 50
+  });
+};
+
+export const getActivityFeed = async (userId: number, limit: number = 50) => {
+  // 1. Get recent activity
+  const expenses = await prisma.expense.findMany({
+    where: {
+      OR: [
+        { payers: { some: { userId } } },
+        { participants: { some: { userId } } }
+      ]
+    },
+    include: { group: true, paidBy: true, payers: true, participants: true },
+    orderBy: { createdAt: 'desc' },
+    take: limit
+  });
+
+  const settlements = await prisma.settlement.findMany({
+    where: {
+      OR: [
+        { payerId: userId },
+        { payeeId: userId }
+      ]
+    },
+    include: { group: true, payer: true, payee: true },
+    orderBy: { createdAt: 'desc' },
+    take: limit
+  });
+
+  // 2. Format and merge activities
+  const activities = [];
+  
+  for (const exp of expenses) {
+    const isPayer = exp.paidById === userId;
+    
+    const userPaidObj = exp.payers.find(p => p.userId === userId);
+    const userShareObj = exp.participants.find(p => p.userId === userId);
+    
+    const userPaid = userPaidObj ? userPaidObj.amountPaid : 0;
+    const userShare = userShareObj ? userShareObj.shareAmount : 0;
+    const netImpact = userPaid - userShare;
+
+      let actionText = '';
+      if (userPaid > 0) {
+        if (userPaid === exp.totalAmount) {
+          actionText = `You paid the full bill`;
+        } else {
+          actionText = `You paid Rs. ${(userPaid / 100).toFixed(2)}`;
+        }
+      } else {
+        if (exp.payers && exp.payers.length === 1) {
+          actionText = `${exp.paidBy.name} paid, you owe your share`;
+        } else {
+          actionText = `Multiple people paid, you owe your share`;
+        }
+      }
+
+      activities.push({
+        id: `exp-${exp.id}`,
+        type: 'EXPENSE',
+        amount: exp.totalAmount,
+        netImpact: netImpact,
+        description: exp.description,
+        groupName: exp.group.name,
+        groupId: exp.groupId,
+        createdAt: exp.createdAt,
+        actionText: actionText
+      });
+  }
+
+  for (const st of settlements) {
+    const isPayer = st.payerId === userId;
+    
+    activities.push({
+      id: `st-${st.id}`,
+      type: 'SETTLEMENT',
+      amount: st.amount,
+      netImpact: isPayer ? st.amount : -st.amount,
+      description: isPayer ? `You paid ${st.payee.name}` : `${st.payer.name} paid you`,
+      groupName: st.group.name,
+      groupId: st.groupId,
+      createdAt: st.createdAt,
+      actionText: isPayer 
+        ? `You settled up with ${st.payee.name}` 
+        : `${st.payer.name} settled up with you`
+    });
+  }
+
+  activities.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+  return activities.slice(0, limit);
+};
+
+export const updateProfile = async (userId: number, data: { name?: string; defaultCurrency?: string; paymentMethod?: string }) => {
+  return prisma.user.update({
+    where: { id: userId },
+    data,
+    select: {
+      id: true,
+      name: true,
+      email: true,
+      defaultCurrency: true,
+      paymentMethod: true
+    }
+  });
+};

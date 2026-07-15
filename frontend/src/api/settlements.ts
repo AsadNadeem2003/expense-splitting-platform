@@ -17,3 +17,8 @@ export const confirmSettlement = async (settlementId: number) => {
   const response = await apiClient.post<{ status: string; data: Settlement }>(`/settlements/${settlementId}/confirm`);
   return response.data.data;
 };
+
+export const rejectSettlement = async (settlementId: number) => {
+  const response = await apiClient.post<{ status: string; data: Settlement }>(`/settlements/${settlementId}/reject`);
+  return response.data.data;
+};

@@ -30,11 +30,6 @@ export const joinGroup = async (userId: number, inviteCode: string) => {
   const group = await prisma.group.findUnique({ where: { inviteCode } });
   if (!group) throw new Error('Invalid invite code');
 
-  const existingMember = await prisma.groupMember.findUnique({
-    where: { groupId_userId: { groupId: group.id, userId } }
-  });
-  if (existingMember) throw new Error('You are already a member of this group');
-
   const existingRequest = await prisma.pendingJoinRequest.findUnique({
     where: { groupId_userId: { groupId: group.id, userId } }
   });
@@ -96,9 +91,15 @@ export const rejectRequest = async (adminId: number, groupId: number, requestId:
 };
 
 export const inviteUser = async (adminId: number, groupId: number, email: string) => {
-  // In a real app this would create an in-app notification or send an email.
-  // For now, we will verify the user exists and create a pending request initiated by admin (or just return success)
-  const user = await prisma.user.findUnique({ where: { email } });
+  const adminMembership = await prisma.groupMember.findUnique({
+    where: { groupId_userId: { groupId, userId: adminId } }
+  });
+  if (!adminMembership || adminMembership.role !== 'ADMIN') {
+    throw new Error('Only group admins can invite users directly');
+  }
+
+  const normalizedEmail = email.toLowerCase().trim();
+  const user = await prisma.user.findUnique({ where: { email: normalizedEmail } });
   if (!user) throw new Error('User not found');
 
   const existingMember = await prisma.groupMember.findUnique({
@@ -106,12 +107,20 @@ export const inviteUser = async (adminId: number, groupId: number, email: string
   });
   if (existingMember) throw new Error('User is already a member');
 
-  // Instead of pending request, maybe we auto-add them?
-  // Spec says: "creates an in-app notification ... visible to them next time"
-  // For simplicity here, we'll just create a pending request for them that they can approve? 
-  // Wait, spec says: "looks up the user by email and creates an in-app notification (or a simple Invite row)"
-  // Since we don't have an Invite model separate from PendingJoinRequest, we can just return success and in real life send a ping.
-  return { message: `Invite sent to ${email}` };
+  await prisma.groupMember.create({
+    data: {
+      groupId,
+      userId: user.id,
+      role: 'MEMBER'
+    }
+  });
+
+  // Remove any pending join requests if they exist
+  await prisma.pendingJoinRequest.deleteMany({
+    where: { groupId, userId: user.id }
+  });
+
+  return { message: `User ${user.name} has been added to the group` };
 };
 
 export const getGroupDetails = async (groupId: number) => {
@@ -142,4 +151,40 @@ export const leaveGroup = async (userId: number, groupId: number) => {
   return prisma.groupMember.delete({
     where: { groupId_userId: { groupId, userId } }
   });
+};
+
+export const removeMember = async (adminId: number, groupId: number, userIdToRemove: number) => {
+  const adminMembership = await prisma.groupMember.findUnique({
+    where: { groupId_userId: { groupId, userId: adminId } }
+  });
+  if (!adminMembership || adminMembership.role !== 'ADMIN') {
+    throw new Error('Only group admins can remove members');
+  }
+
+  if (adminId === userIdToRemove) {
+    throw new Error('You cannot remove yourself');
+  }
+
+  // Check if member exists
+  const memberToRemove = await prisma.groupMember.findUnique({
+    where: { groupId_userId: { groupId, userId: userIdToRemove } }
+  });
+
+  if (!memberToRemove) {
+    throw new Error('User is not a member of this group');
+  }
+
+  // Check if they have zero balance
+  const { getGroupBalances } = await import('./balance.service');
+  const balances = await getGroupBalances(groupId);
+  // Allow removing if balance is negligible (less than 1 Rupee / 100 paisa)
+  if (balances[userIdToRemove] !== undefined && Math.abs(balances[userIdToRemove]) >= 100) {
+    throw new Error('Cannot remove a member with a balance of Rs. 1 or more');
+  }
+
+  await prisma.groupMember.delete({
+    where: { groupId_userId: { groupId, userId: userIdToRemove } }
+  });
+
+  return { message: 'Member removed successfully' };
 };

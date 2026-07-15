@@ -8,9 +8,10 @@ interface ExpenseListProps {
   groupId: number;
   currentUser: User;
   refreshTrigger: number;
+  onExpenseClick: (expenseId: number) => void;
 }
 
-export default function ExpenseList({ groupId, currentUser, refreshTrigger }: ExpenseListProps) {
+export default function ExpenseList({ groupId, currentUser, refreshTrigger, onExpenseClick }: ExpenseListProps) {
   const [expenses, setExpenses] = useState<Expense[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -48,7 +49,7 @@ export default function ExpenseList({ groupId, currentUser, refreshTrigger }: Ex
         const myShare = expense.participants?.find(p => p.user.id === currentUser.id)?.shareAmount || 0;
         
         return (
-          <div key={expense.id} className="expense-item">
+          <div key={expense.id} className="expense-item clickable" onClick={() => onExpenseClick(expense.id)} style={{ cursor: 'pointer' }}>
             <div className="expense-date">
               <span className="month">{new Date(expense.createdAt).toLocaleDateString('en-US', { month: 'short' })}</span>
               <span className="day">{new Date(expense.createdAt).getDate()}</span>

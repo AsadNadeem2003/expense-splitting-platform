@@ -18,6 +18,7 @@ router.get('/:groupId/balances', groupAccessMiddleware, groupController.getBalan
 router.post('/:groupId/invite', groupAccessMiddleware, validateRequest(inviteUserSchema), groupController.inviteUser);
 router.post('/:groupId/approve/:requestId', groupAccessMiddleware, groupController.approveRequest);
 router.post('/:groupId/reject/:requestId', groupAccessMiddleware, groupController.rejectRequest);
+router.delete('/:groupId/members/:userId', groupAccessMiddleware, groupController.removeMember);
 router.delete('/:groupId/leave', groupAccessMiddleware, groupController.leaveGroup);
 
 export default router;
