@@ -210,12 +210,18 @@ export default function GroupDetails() {
               </div>
             </div>
           </div>
-          <div className="group-actions">
-            <button className="btn-primary" onClick={() => setIsAddExpenseOpen(true)}>
-              <Receipt size={18} /> Add Expense
+          <div className="flex items-center gap-3">
+            <button 
+              className="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl text-sm font-semibold shadow-sm transition-all hover:shadow-md active:scale-[0.98]" 
+              onClick={() => setIsAddExpenseOpen(true)}
+            >
+              <Receipt size={16} /> Add Expense
             </button>
-            <button className="btn-secondary" onClick={() => setIsSettleUpOpen(true)}>
-              <CreditCard size={18} /> Settle Up
+            <button 
+              className="flex items-center justify-center gap-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 px-5 py-2.5 rounded-xl text-sm font-semibold shadow-sm transition-all hover:shadow-md active:scale-[0.98]" 
+              onClick={() => setIsSettleUpOpen(true)}
+            >
+              <CreditCard size={16} /> Settle Up
             </button>
           </div>
         </div>
@@ -369,109 +375,163 @@ export default function GroupDetails() {
             <motion.div 
               key="members"
               initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }}
+              className="flex flex-col gap-6 pb-20"
             >
+              {/* Admin Pending Requests */}
               {group.members?.find(m => m.user.id === user?.id)?.role === 'ADMIN' && group.pendingRequests && group.pendingRequests.length > 0 && (
-                <div className="pending-requests-section">
-                  <h3>Pending Requests</h3>
-                  <div className="members-list" style={{ marginBottom: '2rem' }}>
+                <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm">
+                  <h3 className="text-lg font-bold text-slate-900 mb-4">Pending Requests</h3>
+                  <div className="flex flex-col gap-3">
                     {group.pendingRequests.map((req) => (
-                      <div key={req.id} className="member-item pending-item">
-                        <div className="member-avatar">{req.user.name.charAt(0).toUpperCase()}</div>
-                        <div className="member-info">
-                          <h4>{req.user.name}</h4>
-                          <p>{req.user.email}</p>
+                      <div key={req.id} className="flex items-center justify-between p-4 rounded-2xl bg-amber-50 border border-amber-100">
+                        <div className="flex items-center gap-4">
+                          <div className="w-10 h-10 rounded-full bg-white text-amber-600 font-bold flex items-center justify-center border border-amber-200 shadow-sm">
+                            {req.user.name.charAt(0).toUpperCase()}
+                          </div>
+                          <div>
+                            <h4 className="text-sm font-bold text-slate-900">{req.user.name}</h4>
+                            <p className="text-xs text-slate-500">{req.user.email}</p>
+                          </div>
                         </div>
-                        <div className="request-actions">
-                          <button className="btn-approve" onClick={() => handleApproveRequest(req.id)}><Check size={16} /></button>
-                          <button className="btn-reject" onClick={() => handleRejectRequest(req.id)}>✕</button>
+                        <div className="flex gap-2">
+                          <button onClick={() => handleApproveRequest(req.id)} className="w-8 h-8 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center hover:bg-emerald-200 transition-colors">
+                            <Check size={16} />
+                          </button>
+                          <button onClick={() => handleRejectRequest(req.id)} className="w-8 h-8 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center hover:bg-rose-200 transition-colors">
+                            ✕
+                          </button>
                         </div>
                       </div>
                     ))}
                   </div>
-                  <h3>Group Members</h3>
                 </div>
               )}
 
+              {/* Admin Invite Section */}
               {group.members?.find(m => m.user.id === user?.id)?.role === 'ADMIN' && (
-                <div className="invite-section" style={{ marginBottom: '2rem', padding: '1rem', background: 'rgba(255,255,255,0.02)', borderRadius: '12px', border: '1px solid rgba(255,255,255,0.05)' }}>
-                  <h3 style={{ marginTop: 0, marginBottom: '1rem', fontSize: '1.1rem' }}>Add Member</h3>
-                  {inviteError && <div className="text-red-400 text-sm mb-2">{inviteError}</div>}
-                  {inviteSuccess && <div className="text-green-400 text-sm mb-2">{inviteSuccess}</div>}
-                  <input 
-                    type="text" 
-                    placeholder="Search by name or email..." 
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.2)', color: 'white', marginBottom: '0.5rem' }}
-                  />
-                  {searching && <div className="text-sm text-gray-400">Searching...</div>}
-                  {searchResults.length > 0 && (
-                    <div style={{ maxHeight: '150px', overflowY: 'auto', background: 'rgba(0,0,0,0.3)', borderRadius: '8px' }}>
-                      {searchResults.map(u => (
-                        <div key={u.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.5rem 1rem', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                          <div>
-                            <div style={{ fontWeight: 'bold' }}>{u.name}</div>
-                            <div style={{ fontSize: '0.8rem', color: '#aaa' }}>{u.email}</div>
-                          </div>
-                          <button 
-                            onClick={() => handleInviteUser(u.email)}
-                            style={{ background: 'var(--primary)', border: 'none', color: 'white', padding: '0.25rem 0.75rem', borderRadius: '4px', cursor: 'pointer' }}
-                          >
-                            Add
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                  {searchQuery.length > 0 && !searching && searchResults.length === 0 && (
-                    <div className="text-sm text-gray-400">No matching registered users found.</div>
-                  )}
+                <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm">
+                  <h3 className="text-lg font-bold text-slate-900 mb-4">Invite New Members</h3>
                   
-                  <div style={{ marginTop: '1.5rem', paddingTop: '1rem', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
-                    <h4 style={{ margin: '0 0 0.5rem 0', fontSize: '1rem' }}>User not registered?</h4>
-                    <p style={{ fontSize: '0.85rem', color: '#aaa', marginBottom: '0.75rem' }}>Send them an invite link so they can register and automatically join the group.</p>
+                  {inviteError && <div className="text-rose-500 bg-rose-50 p-3 rounded-xl text-sm font-medium mb-4 border border-rose-100">{inviteError}</div>}
+                  {inviteSuccess && <div className="text-emerald-500 bg-emerald-50 p-3 rounded-xl text-sm font-medium mb-4 border border-emerald-100">{inviteSuccess}</div>}
+                  
+                  <div className="flex flex-col gap-2 relative">
+                    <input 
+                      type="text" 
+                      placeholder="Search by name or email..." 
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="w-full bg-slate-50 border border-slate-200 text-slate-900 rounded-xl px-4 py-3 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all placeholder:text-slate-400"
+                    />
+                    
+                    {searching && <div className="text-sm text-slate-400 mt-1">Searching...</div>}
+                    
+                    {searchResults.length > 0 && (
+                      <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl border border-slate-100 shadow-xl overflow-hidden z-10 max-h-48 overflow-y-auto">
+                        {searchResults.map(u => (
+                          <div key={u.id} className="flex justify-between items-center p-3 hover:bg-slate-50 border-b border-slate-100 last:border-0">
+                            <div>
+                              <div className="text-sm font-bold text-slate-900">{u.name}</div>
+                              <div className="text-xs text-slate-500">{u.email}</div>
+                            </div>
+                            <button 
+                              onClick={() => handleInviteUser(u.email)}
+                              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-1.5 rounded-lg text-xs font-semibold transition-colors shadow-sm"
+                            >
+                              Add
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    {searchQuery.length > 0 && !searching && searchResults.length === 0 && (
+                      <div className="text-sm text-slate-400 mt-1">No matching registered users found.</div>
+                    )}
+                  </div>
+                  
+                  <div className="mt-6 pt-6 border-t border-slate-100">
+                    <h4 className="text-sm font-bold text-slate-900 mb-1">User not registered?</h4>
+                    <p className="text-xs text-slate-500 mb-3">Copy and share this link for them to register and join automatically.</p>
                     <button 
-                      className="btn-secondary" 
-                      style={{ width: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem' }}
+                      className="w-full flex items-center justify-center gap-2 bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all shadow-sm active:scale-[0.98]"
                       onClick={copyInviteLink}
                     >
-                      {copied ? <Check size={16} className="text-green" /> : <Copy size={16} />}
+                      {copied ? <Check size={16} className="text-emerald-500" /> : <Copy size={16} />}
                       {copied ? 'Link Copied!' : 'Copy Invite Link'}
                     </button>
                   </div>
                 </div>
               )}
 
-              <div className="members-list">
-                {group.members?.map((member) => (
-                  <div key={member.user.id} className="member-item">
-                    <div className="member-avatar">{member.user.name.charAt(0).toUpperCase()}</div>
-                    <div className="member-info">
-                      <h4>{member.user.name}</h4>
-                      <p>{member.user.email}</p>
+              {/* Active Group Members */}
+              {group.members?.some(m => m.user.id === user?.id) && (
+                <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm">
+                  <h3 className="text-lg font-bold text-slate-900 mb-4">Active Members ({group.members?.length})</h3>
+                <div className="flex flex-col gap-3">
+                  {group.members?.map((member) => (
+                    <div key={member.user.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-2xl bg-slate-50 border border-slate-100 transition-all hover:border-slate-200 gap-4 sm:gap-0">
+                      <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 rounded-full bg-white text-slate-600 font-bold flex items-center justify-center border border-slate-200 shadow-sm flex-shrink-0">
+                          {member.user.name.charAt(0).toUpperCase()}
+                        </div>
+                        <div>
+                          <h4 className="text-sm font-bold text-slate-900">
+                            {member.user.name} {member.user.id === user?.id && <span className="text-blue-500 ml-1">(You)</span>}
+                          </h4>
+                          <p className="text-xs text-slate-500 truncate">{member.user.email}</p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-3 self-end sm:self-auto">
+                        <span className="text-[10px] uppercase tracking-wider font-bold text-slate-400 bg-white px-2 py-1 rounded-md border border-slate-100">
+                          {member.role}
+                        </span>
+                        {group.members?.find(m => m.user.id === user?.id)?.role === 'ADMIN' && member.user.id !== user?.id && (
+                          <button 
+                            onClick={() => handleRemoveMember(member.user.id)}
+                            className="text-xs font-semibold text-rose-500 bg-rose-50 hover:bg-rose-100 px-3 py-1.5 rounded-lg transition-colors border border-rose-100"
+                          >
+                            Remove
+                          </button>
+                        )}
+                        {member.user.id === user?.id && (
+                          <button 
+                            onClick={handleLeaveGroup}
+                            className="text-xs font-semibold text-rose-500 bg-rose-50 hover:bg-rose-100 px-3 py-1.5 rounded-lg transition-colors border border-rose-100"
+                          >
+                            Leave Group
+                          </button>
+                        )}
+                      </div>
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-                      <span className="member-role">{member.role}</span>
-                      {group.members?.find(m => m.user.id === user?.id)?.role === 'ADMIN' && member.user.id !== user?.id && (
-                        <button 
-                          onClick={() => handleRemoveMember(member.user.id)}
-                          style={{ background: 'transparent', border: '1px solid rgba(255,100,100,0.3)', color: '#ff6b6b', padding: '0.25rem 0.5rem', borderRadius: '4px', cursor: 'pointer', fontSize: '0.8rem' }}
-                        >
-                          Remove
-                        </button>
-                      )}
-                      {member.user.id === user?.id && (
-                        <button 
-                          onClick={handleLeaveGroup}
-                          style={{ background: 'transparent', border: '1px solid rgba(255,100,100,0.3)', color: '#ff6b6b', padding: '0.25rem 0.5rem', borderRadius: '4px', cursor: 'pointer', fontSize: '0.8rem' }}
-                        >
-                          Leave Group
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
+              )}
+
+              {/* Former Members */}
+              {(group as any).formerMembers && (group as any).formerMembers.length > 0 && (
+                <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm opacity-80">
+                  <h3 className="text-lg font-bold text-slate-400 mb-4">Former Members</h3>
+                  <div className="flex flex-col gap-3">
+                    {(group as any).formerMembers.map((member: any) => (
+                      <div key={member.id} className="flex items-center justify-between p-4 rounded-2xl bg-slate-50 border border-slate-100">
+                        <div className="flex items-center gap-4">
+                          <div className="w-10 h-10 rounded-full bg-slate-100 text-slate-400 font-bold flex items-center justify-center border border-slate-200 flex-shrink-0">
+                            {member.name.charAt(0).toUpperCase()}
+                          </div>
+                          <div>
+                            <h4 className="text-sm font-bold text-slate-500">{member.name}</h4>
+                            <p className="text-xs text-slate-400">{member.email}</p>
+                          </div>
+                        </div>
+                        <span className="text-[10px] uppercase tracking-wider font-bold text-slate-400 bg-slate-100 px-2 py-1 rounded-md border border-slate-200">
+                          Left
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </motion.div>
           )}
         </AnimatePresence>
