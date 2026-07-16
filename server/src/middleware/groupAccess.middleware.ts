@@ -39,13 +39,33 @@ export const groupAccessMiddleware = async (req: GroupAuthRequest, res: Response
       }
     });
 
-    if (!membership) {
-      res.status(403).json({ error: 'Forbidden: You are not a member of this group' });
-      return;
+    if (membership) {
+      req.membership = membership;
+      return next();
     }
 
-    req.membership = membership;
-    next();
+    // Check for historical access (former members who have past expenses or settlements in this group)
+    const [participated, paid, settlement] = await Promise.all([
+      prisma.expenseParticipant.findFirst({
+        where: { userId: req.user.id, expense: { groupId } }
+      }),
+      prisma.expensePayer.findFirst({
+        where: { userId: req.user.id, expense: { groupId } }
+      }),
+      prisma.settlement.findFirst({
+        where: { OR: [{ payerId: req.user.id }, { payeeId: req.user.id }], groupId }
+      })
+    ]);
+
+    if (participated || paid || settlement) {
+      req.membership = {
+        id: 0,
+        role: 'FORMER' as any
+      };
+      return next();
+    }
+
+    res.status(403).json({ error: 'Forbidden: You are not a member of this group' });
   } catch (error) {
     next(error);
   }

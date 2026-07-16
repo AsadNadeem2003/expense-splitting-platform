@@ -124,13 +124,55 @@ export const inviteUser = async (adminId: number, groupId: number, email: string
 };
 
 export const getGroupDetails = async (groupId: number) => {
-  return prisma.group.findUnique({
+  const group = await prisma.group.findUnique({
     where: { id: groupId },
     include: {
       members: { include: { user: { select: { id: true, name: true, email: true } } } },
       pendingRequests: { where: { status: 'PENDING' }, include: { user: { select: { id: true, name: true, email: true } } } }
     }
   });
+
+  if (!group) return null;
+
+  const currentMemberIds = new Set(group.members.map(m => m.userId));
+  
+  const [expenseParticipants, expensePayers, settlements] = await Promise.all([
+    prisma.expenseParticipant.findMany({
+      where: { expense: { groupId } },
+      include: { user: { select: { id: true, name: true, email: true } } }
+    }),
+    prisma.expensePayer.findMany({
+      where: { expense: { groupId } },
+      include: { user: { select: { id: true, name: true, email: true } } }
+    }),
+    prisma.settlement.findMany({
+      where: { groupId },
+      include: { 
+        payer: { select: { id: true, name: true, email: true } },
+        payee: { select: { id: true, name: true, email: true } }
+      }
+    })
+  ]);
+
+  const formerMembersMap = new Map();
+
+  const addFormerMember = (user: any) => {
+    if (user && !currentMemberIds.has(user.id)) {
+      formerMembersMap.set(user.id, user);
+    }
+  };
+
+  expenseParticipants.forEach(ep => addFormerMember(ep.user));
+  expensePayers.forEach(ep => addFormerMember(ep.user));
+  settlements.forEach(s => {
+    addFormerMember(s.payer);
+    addFormerMember(s.payee);
+  });
+
+  return {
+    ...group,
+    formerMembers: Array.from(formerMembersMap.values())
+  };
 };
 
 export const getUserGroups = async (userId: number) => {

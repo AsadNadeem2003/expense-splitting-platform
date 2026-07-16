@@ -1,5 +1,5 @@
 import prisma from '../config/prisma';
-import { getGroupBalances } from './balance.service';
+import { getGroupBalances, simplifyDebts } from './balance.service';
 
 export const getDashboardStats = async (userId: number) => {
   // 1. Get all groups user is a part of
@@ -8,8 +8,12 @@ export const getDashboardStats = async (userId: number) => {
     include: { group: true }
   });
 
+  const allUsers = await prisma.user.findMany({ select: { id: true, name: true } });
+  const userMap = new Map(allUsers.map(u => [u.id, u.name]));
+
   let totalOwed = 0;
   let totalOwes = 0;
+  const balancesBreakdown: { groupId: number, groupName: string, type: 'OWES' | 'OWED', otherUserId: number, otherUserName: string, amount: number }[] = [];
 
   // 2. Calculate balance for each group
   for (const m of memberships) {
@@ -17,6 +21,29 @@ export const getDashboardStats = async (userId: number) => {
     const userBal = balances[userId] || 0;
     if (userBal > 0) totalOwed += userBal;
     if (userBal < 0) totalOwes += Math.abs(userBal);
+
+    const simplified = simplifyDebts(balances);
+    for (const debt of simplified) {
+      if (debt.from === userId) {
+        balancesBreakdown.push({
+          groupId: m.groupId,
+          groupName: m.group.name,
+          type: 'OWES',
+          otherUserId: debt.to,
+          otherUserName: userMap.get(debt.to) || 'Unknown',
+          amount: debt.amount
+        });
+      } else if (debt.to === userId) {
+        balancesBreakdown.push({
+          groupId: m.groupId,
+          groupName: m.group.name,
+          type: 'OWED',
+          otherUserId: debt.from,
+          otherUserName: userMap.get(debt.from) || 'Unknown',
+          amount: debt.amount
+        });
+      }
+    }
   }
 
   const totalBalance = totalOwed - totalOwes;
@@ -94,7 +121,8 @@ export const getDashboardStats = async (userId: number) => {
     totalOwes,
     totalOwed,
     totalBalance,
-    recentActivity
+    recentActivity,
+    balancesBreakdown
   };
 };
 

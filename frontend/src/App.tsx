@@ -15,7 +15,7 @@ import { Toaster } from 'react-hot-toast';
 function App() {
   return (
     <AuthProvider>
-      <Toaster position="bottom-right" toastOptions={{ style: { background: '#333', color: '#fff' } }} />
+      <Toaster position="bottom-right" toastOptions={{ style: { background: '#fff', color: '#0f172a', border: '1px solid #e2e8f0', borderRadius: '16px', boxShadow: '0 8px 30px rgb(15,23,42,0.06)' } }} />
       <BrowserRouter>
         <Routes>
           <Route path="/login" element={<Login />} />

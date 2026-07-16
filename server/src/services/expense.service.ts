@@ -90,9 +90,43 @@ export const updateExpense = async (userId: number, expenseId: number, data: Upd
     primaryPayerId = newPayers.sort((a, b) => b.amountPaid - a.amountPaid)[0].userId;
   }
 
+  let isChanged = false;
+  if (data.description && data.description !== expense.description) isChanged = true;
+  if (totalPaisa !== expense.totalAmount) isChanged = true;
+
+  if (data.participants) {
+    if (newParticipants.length !== expense.participants.length) isChanged = true;
+    else {
+      const oldP = [...expense.participants].sort((a, b) => a.userId - b.userId);
+      const newP = [...newParticipants].sort((a, b) => a.userId - b.userId);
+      for (let i = 0; i < oldP.length; i++) {
+        if (oldP[i].userId !== newP[i].userId || oldP[i].shareAmount !== newP[i].shareAmount) {
+          isChanged = true; break;
+        }
+      }
+    }
+  }
+
+  if (data.payers) {
+    if (newPayers.length !== expense.payers.length) isChanged = true;
+    else {
+      const oldP = [...expense.payers].sort((a, b) => a.userId - b.userId);
+      const newP = [...newPayers].sort((a, b) => a.userId - b.userId);
+      for (let i = 0; i < oldP.length; i++) {
+        if (oldP[i].userId !== newP[i].userId || oldP[i].amountPaid !== newP[i].amountPaid) {
+          isChanged = true; break;
+        }
+      }
+    }
+  }
+
+  if (!isChanged) {
+    return expense;
+  }
+
   return prisma.$transaction(async (tx) => {
     // Log the edit
-    const changeType = data.participants || data.payers ? 'FULL_EDIT' : 'DESCRIPTION_CHANGED';
+    const changeType = (data.participants || data.payers) ? 'FULL_EDIT' : 'DESCRIPTION_CHANGED';
     
     await tx.expenseEditHistory.create({
       data: {
@@ -139,7 +173,10 @@ export const updateExpense = async (userId: number, expenseId: number, data: Upd
       }
     });
 
-    return tx.expense.findUnique({ where: { id: expenseId }, include: { participants: true, payers: true } });
+    return tx.expense.findUnique({
+      where: { id: expenseId },
+      include: { participants: true, payers: true }
+    });
   });
 };
 

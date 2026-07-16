@@ -5,6 +5,7 @@ export interface DashboardStats {
   totalOwed: number;
   totalBalance: number;
   recentActivity: any[];
+  balancesBreakdown: any[];
 }
 
 export const getDashboardStats = async (): Promise<DashboardStats> => {
