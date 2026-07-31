@@ -17,20 +17,20 @@ dist/
 build/
 .cache/
 
-# --- SERVER EXPLICIT RULES ---
-# Keeps server specific modules and builds safe
-server/node_modules/
-server/dist/
-server/build/
+# --- BACKEND EXPLICIT RULES ---
+# Keeps backend specific modules and builds safe
+backend/node_modules/
+backend/dist/
+backend/build/
 
 # Critical: Prevent pushing backend secrets
-server/.env
-server/.env.local
-server/.env.production
+backend/.env
+backend/.env.local
+backend/.env.production
 # Ensure the example schema is always tracked
-!server/.env.example
+!backend/.env.example
 
 # --- PRISMA RULES ---
 # If you use SQLite locally, ignore the dev database file
-server/prisma/*.db
-server/prisma/*.db-journal
+backend/prisma/*.db
+backend/prisma/*.db-journal
