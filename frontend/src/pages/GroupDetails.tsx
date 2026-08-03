@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Loader, Users, Receipt, CreditCard, Copy, Check } from 'lucide-react';
+import { ArrowLeft, Loader, Users, Receipt, CreditCard, Copy, Check, Bell } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getGroupDetails, getGroupBalances } from '../api/groups';
 import { approveJoinRequest, rejectJoinRequest, inviteUser, removeMember, leaveGroup } from '../api/groups';
-import { getGroupSettlements, confirmSettlement, rejectSettlement } from '../api/settlements';
+import { getGroupSettlements, confirmSettlement, rejectSettlement, sendReminder } from '../api/settlements';
 import { searchUsers } from '../api/users';
 import { useAuth } from '../context/AuthContext';
 import type { Group } from '../types';
@@ -34,6 +34,7 @@ export default function GroupDetails() {
   const [selectedExpenseId, setSelectedExpenseId] = useState<number | null>(null);
   const [editExpenseData, setEditExpenseData] = useState<any>(null);
   const [expenseRefreshTrigger, setExpenseRefreshTrigger] = useState(0);
+  const [sendingReminderId, setSendingReminderId] = useState<number | null>(null);
 
   // Invite Search State
   const [searchQuery, setSearchQuery] = useState('');
@@ -143,6 +144,18 @@ export default function GroupDetails() {
       fetchDetails();
     } catch (err: any) {
       toast.error(err.response?.data?.message || 'Failed to reject settlement');
+    }
+  };
+
+  const handleSendReminder = async (debtorId: number, debtorName: string) => {
+    setSendingReminderId(debtorId);
+    try {
+      await sendReminder(Number(groupId), debtorId);
+      toast.success(`Reminder email sent to ${debtorName}!`);
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Failed to send reminder email');
+    } finally {
+      setSendingReminderId(null);
     }
   };
 
@@ -324,6 +337,7 @@ export default function GroupDetails() {
                     const toUser = group.members?.find(m => m.user.id.toString() === b.to?.toString())?.user;
                     const amount = (b.amount / 100).toFixed(2);
                     const isCurrentUserOwes = user?.id?.toString() === b.from?.toString();
+                    const isCurrentUserOwed = user?.id?.toString() === b.to?.toString();
                     
                     return (
                       <div key={idx} className={`balance-card-pro ${isCurrentUserOwes ? 'highlight-owe' : ''}`}>
@@ -354,6 +368,19 @@ export default function GroupDetails() {
                               onClick={() => setIsSettleUpOpen(true)}
                             >
                               Settle
+                            </button>
+                          </div>
+                        )}
+
+                        {isCurrentUserOwed && (
+                          <div className="balance-action">
+                            <button 
+                              className="flex items-center gap-1.5 bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 px-4 py-2 rounded-xl text-xs font-bold transition-all shadow-sm active:scale-95 disabled:opacity-50" 
+                              onClick={() => handleSendReminder(b.from, fromUser?.name || 'Member')}
+                              disabled={sendingReminderId === b.from}
+                            >
+                              <Bell size={14} className="text-amber-600" />
+                              {sendingReminderId === b.from ? 'Sending...' : 'Remind'}
                             </button>
                           </div>
                         )}
@@ -558,6 +585,10 @@ export default function GroupDetails() {
         onEditClick={(expenseData) => {
           setEditExpenseData(expenseData);
           setIsAddExpenseOpen(true);
+        }}
+        onDeleteComplete={() => {
+          setIsExpenseDetailOpen(false);
+          handleExpenseOrSettlementAdded();
         }}
       />
 

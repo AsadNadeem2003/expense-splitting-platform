@@ -158,4 +158,56 @@ router.post('/:id/reject', settlementController.rejectSettlement);
  */
 router.get('/group/:groupId', groupAccessMiddleware, settlementController.getGroupSettlements);
 
+/**
+ * @swagger
+ * /api/settlements/trigger-reminders:
+ *   post:
+ *     summary: Manually trigger the 7-day settlement reminder check
+ *     tags: [Settlements]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Reminders processed successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/SuccessResponse'
+ */
+router.post('/trigger-reminders', settlementController.triggerReminders);
+
+/**
+ * @swagger
+ * /api/settlements/send-reminder:
+ *   post:
+ *     summary: Send a reminder email to a debtor who owes money in a group
+ *     tags: [Settlements]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - groupId
+ *               - debtorId
+ *             properties:
+ *               groupId:
+ *                 type: integer
+ *                 example: 1
+ *               debtorId:
+ *                 type: integer
+ *                 example: 2
+ *     responses:
+ *       200:
+ *         description: Reminder email sent
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/SuccessResponse'
+ */
+router.post('/send-reminder', settlementController.sendReminder);
+
 export default router;

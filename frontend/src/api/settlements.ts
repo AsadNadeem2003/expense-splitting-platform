@@ -22,3 +22,8 @@ export const rejectSettlement = async (settlementId: number) => {
   const response = await apiClient.post<{ status: string; data: Settlement }>(`/settlements/${settlementId}/reject`);
   return response.data.data;
 };
+
+export const sendReminder = async (groupId: number, debtorId: number) => {
+  const response = await apiClient.post<{ status: string; message: string }>('/settlements/send-reminder', { groupId, debtorId });
+  return response.data;
+};

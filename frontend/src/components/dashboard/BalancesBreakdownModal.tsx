@@ -1,6 +1,8 @@
-import React from 'react';
-import { X, ArrowUpRight, ArrowDownRight, Users } from 'lucide-react';
+import React, { useState } from 'react';
+import { X, ArrowUpRight, ArrowDownRight, Users, Bell } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import toast from 'react-hot-toast';
+import { sendReminder } from '../../api/settlements';
 
 interface BreakdownItem {
   groupId: number;
@@ -20,6 +22,7 @@ interface BalancesBreakdownModalProps {
 
 const BalancesBreakdownModal: React.FC<BalancesBreakdownModalProps> = ({ isOpen, onClose, type, breakdown }) => {
   const navigate = useNavigate();
+  const [sendingReminderId, setSendingReminderId] = useState<number | null>(null);
 
   if (!isOpen) return null;
 
@@ -94,10 +97,30 @@ const BalancesBreakdownModal: React.FC<BalancesBreakdownModalProps> = ({ isOpen,
                             </p>
                           </div>
                         </div>
-                        <div className="text-right">
+                        <div className="text-right flex flex-col items-end gap-1">
                           <p className={`font-bold font-mono ${type === 'OWES' ? 'text-rose-600' : 'text-emerald-600'}`}>
                             Rs. {(item.amount / 100).toFixed(2)}
                           </p>
+                          {type === 'OWED' && (
+                            <button
+                              onClick={async () => {
+                                setSendingReminderId(item.otherUserId);
+                                try {
+                                  await sendReminder(item.groupId, item.otherUserId);
+                                  toast.success(`Reminder sent to ${item.otherUserName}!`);
+                                } catch (err: any) {
+                                  toast.error(err.response?.data?.message || 'Failed to send reminder');
+                                } finally {
+                                  setSendingReminderId(null);
+                                }
+                              }}
+                              disabled={sendingReminderId === item.otherUserId}
+                              className="flex items-center gap-1 bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 px-2.5 py-1 rounded-lg text-xs font-bold transition-all shadow-sm active:scale-95 disabled:opacity-50"
+                            >
+                              <Bell size={12} className="text-amber-600" />
+                              {sendingReminderId === item.otherUserId ? 'Sending...' : 'Remind'}
+                            </button>
+                          )}
                         </div>
                       </div>
                     ))}

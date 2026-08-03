@@ -15,7 +15,19 @@ export const updateExpense = async (req: GroupAuthRequest, res: Response, next: 
     const expenseId = parseInt(req.params.id, 10);
     const expense = await expenseService.updateExpense(req.user!.id, expenseId, req.body);
     res.status(200).json({ status: 'success', data: expense });
-  } catch (error) { next(error); }
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const deleteExpense = async (req: AuthRequest, res: Response, next: NextFunction) => {
+  try {
+    const expenseId = parseInt(req.params.id, 10);
+    await expenseService.deleteExpense(req.user!.id, expenseId);
+    res.status(200).json({ status: 'success', message: 'Expense deleted successfully' });
+  } catch (error) {
+    next(error);
+  }
 };
 
 export const getExpense = async (req: AuthRequest, res: Response, next: NextFunction) => {

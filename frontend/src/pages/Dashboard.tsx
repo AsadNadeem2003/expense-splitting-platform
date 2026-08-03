@@ -56,7 +56,7 @@ const Dashboard = () => {
       const beforeVerb = text.match(/^(.+?)\s+(?:paid|settled)/i);
       if (beforeVerb) {
         const name = beforeVerb[1].trim();
-        if (name.toLowerCase() !== 'you' && !name.toLowerCase().includes('multiple')) return name;
+        if (name.toLowerCase() !== 'you') return name;
       }
       // Pattern 2: "...paid X" or "...with X" — name after the verb
       const afterVerb = text.match(/(?:paid|with)\s+(.+?)$/i);

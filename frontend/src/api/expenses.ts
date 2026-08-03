@@ -20,3 +20,8 @@ export const updateExpense = async (expenseId: number, data: any) => {
   const response = await apiClient.patch<{ status: string; data: Expense }>(`/expenses/${expenseId}`, data);
   return response.data.data;
 };
+
+export const deleteExpense = async (expenseId: number) => {
+  const response = await apiClient.delete<{ status: string; message: string }>(`/expenses/${expenseId}`);
+  return response.data;
+};

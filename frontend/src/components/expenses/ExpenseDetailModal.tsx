@@ -11,11 +11,13 @@ interface ExpenseDetailModalProps {
   group: Group;
   currentUser: User;
   onEditClick: (expense: any) => void;
+  onDeleteComplete?: () => void;
 }
 
-export default function ExpenseDetailModal({ isOpen, onClose, expenseId, group, currentUser, onEditClick }: ExpenseDetailModalProps) {
+export default function ExpenseDetailModal({ isOpen, onClose, expenseId, group, currentUser, onEditClick, onDeleteComplete }: ExpenseDetailModalProps) {
   const [expense, setExpense] = useState<any>(null);
   const [loading, setLoading] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   useEffect(() => {
     if (isOpen && expenseId) {
@@ -32,6 +34,26 @@ export default function ExpenseDetailModal({ isOpen, onClose, expenseId, group, 
       console.error(err);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!expense) return;
+    if (window.confirm('Are you sure you want to delete this expense? This action cannot be undone and balances will be recalculated.')) {
+      setDeleting(true);
+      try {
+        const { deleteExpense } = await import('../../api/expenses');
+        await deleteExpense(expense.id);
+        const { default: toast } = await import('react-hot-toast');
+        toast.success('Expense deleted successfully');
+        if (onDeleteComplete) onDeleteComplete();
+        else onClose();
+      } catch (err: any) {
+        const { default: toast } = await import('react-hot-toast');
+        toast.error(err.response?.data?.message || 'Failed to delete expense');
+      } finally {
+        setDeleting(false);
+      }
     }
   };
 
@@ -182,26 +204,40 @@ export default function ExpenseDetailModal({ isOpen, onClose, expenseId, group, 
 
           {/* Footer Actions */}
           {!loading && expense && (
-            <div className="px-6 py-5 border-t border-slate-100 bg-white flex items-center justify-end gap-3 sticky bottom-0">
-              {group.members?.find((m: any) => m.user.id === currentUser.id) && (
+            <div className="px-6 py-5 border-t border-slate-100 bg-white flex items-center justify-between gap-3 sticky bottom-0">
+              <div>
+                {(expense.createdById === currentUser.id || expense.paidById === currentUser.id) && (
+                  <button 
+                    type="button" 
+                    className="flex items-center gap-2 bg-rose-50 hover:bg-rose-100 text-rose-600 px-4 py-2.5 rounded-xl text-sm font-semibold shadow-sm transition-all" 
+                    onClick={handleDelete}
+                    disabled={deleting}
+                  >
+                    {deleting ? 'Deleting...' : 'Delete Expense'}
+                  </button>
+                )}
+              </div>
+              <div className="flex items-center gap-3">
+                {group.members?.find((m: any) => m.user.id === currentUser.id) && (
+                  <button 
+                    type="button" 
+                    className="flex items-center gap-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 px-5 py-2.5 rounded-xl text-sm font-semibold shadow-sm transition-all hover:shadow-md active:scale-95" 
+                    onClick={() => {
+                      onClose();
+                      onEditClick(expense);
+                    }}
+                  >
+                    <Edit2 size={16} /> Edit Expense
+                  </button>
+                )}
                 <button 
                   type="button" 
-                  className="flex items-center gap-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 px-5 py-2.5 rounded-xl text-sm font-semibold shadow-sm transition-all hover:shadow-md active:scale-95" 
-                  onClick={() => {
-                    onClose();
-                    onEditClick(expense);
-                  }}
+                  className="bg-slate-900 hover:bg-slate-800 text-white px-6 py-2.5 rounded-xl text-sm font-semibold shadow-sm transition-all hover:shadow-md active:scale-95" 
+                  onClick={onClose}
                 >
-                  <Edit2 size={16} /> Edit Expense
+                  Close
                 </button>
-              )}
-              <button 
-                type="button" 
-                className="bg-slate-900 hover:bg-slate-800 text-white px-6 py-2.5 rounded-xl text-sm font-semibold shadow-sm transition-all hover:shadow-md active:scale-95" 
-                onClick={onClose}
-              >
-                Close
-              </button>
+              </div>
             </div>
           )}
         </motion.div>

@@ -50,3 +50,23 @@ export const getBalances = async (req: GroupAuthRequest, res: Response, next: Ne
     res.status(200).json({ status: 'success', data: { balances, simplified } });
   } catch (error) { next(error); }
 };
+
+export const triggerReminders = async (req: AuthRequest, res: Response, next: NextFunction) => {
+  try {
+    const { process7DaySettlementReminders } = await import('../services/reminder.service');
+    const result = await process7DaySettlementReminders();
+    res.status(200).json({ status: 'success', message: '7-day settlement reminders processed', data: result });
+  } catch (error) { next(error); }
+};
+
+export const sendReminder = async (req: AuthRequest, res: Response, next: NextFunction) => {
+  try {
+    const { groupId, debtorId } = req.body;
+    if (!groupId || !debtorId) {
+      res.status(400).json({ error: 'groupId and debtorId are required' });
+      return;
+    }
+    const result = await settlementService.sendSingleReminder(req.user!.id, parseInt(groupId, 10), parseInt(debtorId, 10));
+    res.status(200).json({ status: 'success', message: result.message });
+  } catch (error) { next(error); }
+};

@@ -18,7 +18,7 @@ const options: swaggerJsdoc.Options = {
         description: 'Local development server',
         variables: {
           port: {
-            default: '5000',
+            default: '4000',
           },
         },
       },

@@ -8,6 +8,7 @@ import groupRoutes from './routes/group.routes';
 import expenseRoutes from './routes/expense.routes';
 import settlementRoutes from './routes/settlement.routes';
 import errorHandler from './middleware/errorHandler';
+import { initCronJobs } from './config/cron';
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -45,4 +46,5 @@ app.use(errorHandler);
 app.listen(PORT, () => {
   console.log(`🚀 Server execution layer running on port ${PORT}`);
   console.log(`📚 Swagger API docs available at http://localhost:${PORT}/api-docs`);
+  initCronJobs();
 });

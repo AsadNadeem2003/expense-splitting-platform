@@ -20,11 +20,14 @@ model User {
   groupMemberships   GroupMember[]
   pendingRequests    PendingJoinRequest[]
   paidExpenses       Expense[]            @relation("PaidBy")
+  createdExpenses    Expense[]            @relation("CreatedBy")
   participations     ExpenseParticipant[]
   expensePayers      ExpensePayer[]
   editHistories      ExpenseEditHistory[] @relation("EditedBy")
   settlementsPaid    Settlement[]         @relation("SettlementPayer")
   settlementsReceived Settlement[]        @relation("SettlementPayee")
+  reminderLogsSent     SettlementReminderLog[] @relation("ReminderDebtor")
+  reminderLogsReceived SettlementReminderLog[] @relation("ReminderCreditor")
 }
 
 model Group {
@@ -38,6 +41,7 @@ model Group {
   pendingRequests PendingJoinRequest[]
   expenses        Expense[]
   settlements     Settlement[]
+  reminderLogs    SettlementReminderLog[]
 }
 
 model GroupMember {
@@ -85,11 +89,13 @@ model Expense {
   description  String
   totalAmount  Int      // stored in PAISA
   paidById     Int      // primary payer (for single-payer case)
+  createdById  Int?     // who added it
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
   group        Group    @relation(fields: [groupId], references: [id])
   paidBy       User     @relation("PaidBy", fields: [paidById], references: [id])
+  createdBy    User?    @relation("CreatedBy", fields: [createdById], references: [id])
   participants ExpenseParticipant[]
   payers       ExpensePayer[]
   editHistory  ExpenseEditHistory[]
@@ -153,5 +159,18 @@ enum SettlementStatus {
   AWAITING_VERIFICATION
   CONFIRMED
   REJECTED
+}
+
+model SettlementReminderLog {
+  id         Int      @id @default(autoincrement())
+  groupId    Int
+  debtorId   Int
+  creditorId Int
+  amount     Int      // paisa
+  sentAt     DateTime @default(now())
+
+  group    Group @relation(fields: [groupId], references: [id], onDelete: Cascade)
+  debtor   User  @relation("ReminderDebtor", fields: [debtorId], references: [id], onDelete: Cascade)
+  creditor User  @relation("ReminderCreditor", fields: [creditorId], references: [id], onDelete: Cascade)
 }
 

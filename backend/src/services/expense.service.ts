@@ -34,6 +34,7 @@ export const createExpense = async (userId: number, data: CreateExpenseInput) =>
         description: data.description,
         totalAmount: totalPaisa,
         paidById: primaryPayerId,
+        createdById: userId,
         participants: {
           create: participants
         },
@@ -199,5 +200,34 @@ export const getGroupExpenses = async (groupId: number) => {
     where: { groupId },
     include: { paidBy: { select: { id: true, name: true } } },
     orderBy: { createdAt: 'desc' }
+  });
+};
+
+export const deleteExpense = async (userId: number, expenseId: number) => {
+  const expense = await prisma.expense.findUnique({
+    where: { id: expenseId }
+  });
+
+  if (!expense) {
+    throw new Error('Expense not found');
+  }
+
+  // Ensure only the person who created it (or the primary payer as fallback) can delete it
+  if (expense.createdById !== userId && expense.paidById !== userId) {
+    throw new Error('You do not have permission to delete this expense');
+  }
+
+  return prisma.$transaction(async (tx) => {
+    // 1. Delete Edit History
+    await tx.expenseEditHistory.deleteMany({ where: { expenseId } });
+    
+    // 2. Delete Participants
+    await tx.expenseParticipant.deleteMany({ where: { expenseId } });
+    
+    // 3. Delete Payers
+    await tx.expensePayer.deleteMany({ where: { expenseId } });
+    
+    // 4. Delete the Expense
+    return tx.expense.delete({ where: { id: expenseId } });
   });
 };

@@ -53,7 +53,7 @@ const Activity = () => {
       const beforeVerb = text.match(/^(.+?)\s+(?:paid|settled)/i);
       if (beforeVerb) {
         const name = beforeVerb[1].trim();
-        if (name.toLowerCase() !== 'you' && !name.toLowerCase().includes('multiple')) return name;
+        if (name.toLowerCase() !== 'you') return name;
       }
       const afterVerb = text.match(/(?:paid|with)\s+(.+?)$/i);
       if (afterVerb) {
@@ -167,7 +167,7 @@ const Activity = () => {
                     {/* Subtext Outcome */}
                     {activity.netImpact !== 0 ? (
                       <p className={`text-xs mt-1 font-semibold ${isPositive ? 'text-emerald-600' : 'text-rose-600'}`}>
-                        {isPositive ? `+ You get back ${amountFormatted}` : `- You paid ${amountFormatted}`}
+                        {isPositive ? `+ You get back ${amountFormatted}` : `- You owe ${amountFormatted}`}
                       </p>
                     ) : (
                       <p className="text-xs mt-1 font-medium text-slate-400">

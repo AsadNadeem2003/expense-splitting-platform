@@ -41,6 +41,7 @@ export interface Expense {
   description: string;
   totalAmount: number;
   paidById: number;
+  createdById?: number;
   createdAt: string;
   paidBy?: User;
   participants?: { user: User; shareAmount: number }[];

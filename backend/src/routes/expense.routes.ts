@@ -135,4 +135,29 @@ router.get('/:id', expenseController.getExpense);
  */
 router.patch('/:id', validateRequest(updateExpenseSchema), groupAccessMiddleware, expenseController.updateExpense);
 
+/**
+ * @swagger
+ * /api/expenses/{id}:
+ *   delete:
+ *     summary: Delete an existing expense
+ *     tags: [Expenses]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: integer
+ *         description: The expense ID
+ *     responses:
+ *       200:
+ *         description: Expense deleted successfully
+ *       403:
+ *         description: Not authorized to delete this expense
+ *       404:
+ *         description: Expense not found
+ */
+router.delete('/:id', expenseController.deleteExpense);
+
 export default router;
