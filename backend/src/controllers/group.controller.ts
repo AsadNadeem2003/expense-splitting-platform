@@ -27,7 +27,7 @@ export const getUserGroups = async (req: AuthRequest, res: Response, next: NextF
 
 export const getGroupDetails = async (req: GroupAuthRequest, res: Response, next: NextFunction) => {
   try {
-    const groupId = parseInt(req.params.groupId, 10);
+    const groupId = parseInt(req.params.groupId as string, 10);
     const group = await groupService.getGroupDetails(groupId);
     res.status(200).json({ status: 'success', data: group });
   } catch (error) { next(error); }
@@ -35,8 +35,8 @@ export const getGroupDetails = async (req: GroupAuthRequest, res: Response, next
 
 export const approveRequest = async (req: GroupAuthRequest, res: Response, next: NextFunction) => {
   try {
-    const groupId = parseInt(req.params.groupId, 10);
-    const requestId = parseInt(req.params.requestId, 10);
+    const groupId = parseInt(req.params.groupId as string, 10);
+    const requestId = parseInt(req.params.requestId as string, 10);
     const result = await groupService.approveRequest(req.user!.id, groupId, requestId);
     res.status(200).json({ status: 'success', data: result });
   } catch (error) { next(error); }
@@ -44,8 +44,8 @@ export const approveRequest = async (req: GroupAuthRequest, res: Response, next:
 
 export const rejectRequest = async (req: GroupAuthRequest, res: Response, next: NextFunction) => {
   try {
-    const groupId = parseInt(req.params.groupId, 10);
-    const requestId = parseInt(req.params.requestId, 10);
+    const groupId = parseInt(req.params.groupId as string, 10);
+    const requestId = parseInt(req.params.requestId as string, 10);
     const result = await groupService.rejectRequest(req.user!.id, groupId, requestId);
     res.status(200).json({ status: 'success', data: result });
   } catch (error) { next(error); }
@@ -53,7 +53,7 @@ export const rejectRequest = async (req: GroupAuthRequest, res: Response, next: 
 
 export const inviteUser = async (req: GroupAuthRequest, res: Response, next: NextFunction) => {
   try {
-    const groupId = parseInt(req.params.groupId, 10);
+    const groupId = parseInt(req.params.groupId as string, 10);
     const result = await groupService.inviteUser(req.user!.id, groupId, req.body.email);
     res.status(200).json({ status: 'success', data: result });
   } catch (error) { next(error); }
@@ -61,7 +61,7 @@ export const inviteUser = async (req: GroupAuthRequest, res: Response, next: Nex
 
 export const getBalances = async (req: GroupAuthRequest, res: Response, next: NextFunction) => {
   try {
-    const groupId = parseInt(req.params.groupId, 10);
+    const groupId = parseInt(req.params.groupId as string, 10);
     const balances = await balanceService.getGroupBalances(groupId);
     const simplified = balanceService.simplifyDebts(balances);
     res.status(200).json({ status: 'success', data: { balances, simplified } });
@@ -70,7 +70,7 @@ export const getBalances = async (req: GroupAuthRequest, res: Response, next: Ne
 
 export const leaveGroup = async (req: GroupAuthRequest, res: Response, next: NextFunction) => {
   try {
-    const groupId = parseInt(req.params.groupId, 10);
+    const groupId = parseInt(req.params.groupId as string, 10);
     const userId = req.user!.id;
     
     const balances = await balanceService.getGroupBalances(groupId);
@@ -88,8 +88,8 @@ export const leaveGroup = async (req: GroupAuthRequest, res: Response, next: Nex
 
 export const removeMember = async (req: GroupAuthRequest, res: Response, next: NextFunction) => {
   try {
-    const groupId = parseInt(req.params.groupId, 10);
-    const userIdToRemove = parseInt(req.params.userId, 10);
+    const groupId = parseInt(req.params.groupId as string, 10);
+    const userIdToRemove = parseInt(req.params.userId as string, 10);
     const result = await groupService.removeMember(req.user!.id, groupId, userIdToRemove);
     res.status(200).json({ status: 'success', data: result });
   } catch (error) { next(error); }

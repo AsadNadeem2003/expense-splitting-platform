@@ -12,7 +12,7 @@ export const createExpense = async (req: GroupAuthRequest, res: Response, next: 
 
 export const updateExpense = async (req: GroupAuthRequest, res: Response, next: NextFunction) => {
   try {
-    const expenseId = parseInt(req.params.id, 10);
+    const expenseId = parseInt(req.params.id as string, 10);
     const expense = await expenseService.updateExpense(req.user!.id, expenseId, req.body);
     res.status(200).json({ status: 'success', data: expense });
   } catch (error) {
@@ -22,7 +22,7 @@ export const updateExpense = async (req: GroupAuthRequest, res: Response, next: 
 
 export const deleteExpense = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
-    const expenseId = parseInt(req.params.id, 10);
+    const expenseId = parseInt(req.params.id as string, 10);
     await expenseService.deleteExpense(req.user!.id, expenseId);
     res.status(200).json({ status: 'success', message: 'Expense deleted successfully' });
   } catch (error) {
@@ -32,7 +32,7 @@ export const deleteExpense = async (req: AuthRequest, res: Response, next: NextF
 
 export const getExpense = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
-    const expenseId = parseInt(req.params.id, 10);
+    const expenseId = parseInt(req.params.id as string, 10);
     const expense = await expenseService.getExpense(expenseId);
     res.status(200).json({ status: 'success', data: expense });
   } catch (error) { next(error); }
@@ -40,7 +40,7 @@ export const getExpense = async (req: AuthRequest, res: Response, next: NextFunc
 
 export const getGroupExpenses = async (req: GroupAuthRequest, res: Response, next: NextFunction) => {
   try {
-    const groupId = parseInt(req.params.groupId, 10);
+    const groupId = parseInt(req.params.groupId as string, 10);
     const expenses = await expenseService.getGroupExpenses(groupId);
     res.status(200).json({ status: 'success', data: expenses });
   } catch (error) { next(error); }

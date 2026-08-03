@@ -20,7 +20,7 @@ export const createSettlement = async (req: GroupAuthRequest, res: Response, nex
 
 export const confirmSettlement = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
-    const id = parseInt(req.params.id, 10);
+    const id = parseInt(req.params.id as string, 10);
     const settlement = await settlementService.confirmSettlement(req.user!.id, id);
     res.status(200).json({ status: 'success', data: settlement });
   } catch (error) { next(error); }
@@ -28,7 +28,7 @@ export const confirmSettlement = async (req: AuthRequest, res: Response, next: N
 
 export const rejectSettlement = async (req: AuthRequest, res: Response, next: NextFunction) => {
   try {
-    const id = parseInt(req.params.id, 10);
+    const id = parseInt(req.params.id as string, 10);
     const settlement = await settlementService.rejectSettlement(req.user!.id, id);
     res.status(200).json({ status: 'success', data: settlement });
   } catch (error) { next(error); }
@@ -36,7 +36,7 @@ export const rejectSettlement = async (req: AuthRequest, res: Response, next: Ne
 
 export const getGroupSettlements = async (req: GroupAuthRequest, res: Response, next: NextFunction) => {
   try {
-    const groupId = parseInt(req.params.groupId, 10);
+    const groupId = parseInt(req.params.groupId as string, 10);
     const settlements = await settlementService.getGroupSettlements(groupId);
     res.status(200).json({ status: 'success', data: settlements });
   } catch (error) { next(error); }
@@ -44,7 +44,7 @@ export const getGroupSettlements = async (req: GroupAuthRequest, res: Response, 
 
 export const getBalances = async (req: GroupAuthRequest, res: Response, next: NextFunction) => {
   try {
-    const groupId = parseInt(req.params.groupId, 10);
+    const groupId = parseInt(req.params.groupId as string, 10);
     const balances = await balanceService.getGroupBalances(groupId);
     const simplified = balanceService.simplifyDebts(balances);
     res.status(200).json({ status: 'success', data: { balances, simplified } });
