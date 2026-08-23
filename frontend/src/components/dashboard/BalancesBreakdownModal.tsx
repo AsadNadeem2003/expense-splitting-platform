@@ -87,13 +87,17 @@ const BalancesBreakdownModal: React.FC<BalancesBreakdownModalProps> = ({ isOpen,
                   <div className="divide-y divide-slate-100">
                     {group.items.map((item, idx) => (
                       <div key={idx} className="p-5 flex items-center justify-between hover:bg-slate-50 transition-colors">
-                        <div className="flex items-center gap-4">
-                          <div className={`w-10 h-10 rounded-full flex items-center justify-center ${type === 'OWES' ? 'bg-rose-50 text-rose-500' : 'bg-emerald-50 text-emerald-500'}`}>
+                        <div className="flex items-center gap-4 min-w-0 pr-2">
+                          <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${type === 'OWES' ? 'bg-rose-50 text-rose-500' : 'bg-emerald-50 text-emerald-500'}`}>
                             {type === 'OWES' ? <ArrowUpRight size={20} /> : <ArrowDownRight size={20} />}
                           </div>
-                          <div>
-                            <p className="text-sm font-bold text-slate-900">
-                              {type === 'OWES' ? `You owe ${item.otherUserName}` : `${item.otherUserName} owes you`}
+                          <div className="min-w-0 flex-1">
+                            <p className="text-sm font-bold text-slate-900 break-words">
+                              {type === 'OWES' ? (
+                                <>You owe <span className="break-all">{item.otherUserName}</span></>
+                              ) : (
+                                <><span className="break-all">{item.otherUserName}</span> owes you</>
+                              )}
                             </p>
                           </div>
                         </div>

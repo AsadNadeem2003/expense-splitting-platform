@@ -1,6 +1,8 @@
 import { Router } from 'express';
 import * as userController from '../controllers/user.controller';
 import { authMiddleware } from '../middleware/auth.middleware';
+import validateRequest from '../middleware/validateRequest';
+import { updateProfileSchema } from '../validators/user.schema';
 
 const router = Router();
 
@@ -112,6 +114,6 @@ router.get('/activity', userController.getActivityFeed);
  *       401:
  *         description: Unauthorized
  */
-router.put('/profile', userController.updateProfile);
+router.put('/profile', validateRequest(updateProfileSchema), userController.updateProfile);
 
 export default router;

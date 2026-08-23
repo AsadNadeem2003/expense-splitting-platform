@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { createSettlement } from '../../api/settlements';
+import { X, CreditCard, ArrowUpRight, Upload, Image as ImageIcon, CheckCircle2, Loader, Info } from 'lucide-react';
 import type { Group, User } from '../../types';
-import './SettleUpModal.css';
 
 interface SettleUpModalProps {
   isOpen: boolean;
@@ -10,10 +10,17 @@ interface SettleUpModalProps {
   group: Group;
   currentUser: User;
   onSettlementAdded: () => void;
-  balances: any; // We'll pass down the balances to know who owes whom
+  balances: any;
 }
 
-export default function SettleUpModal({ isOpen, onClose, group, currentUser, onSettlementAdded, balances }: SettleUpModalProps) {
+export default function SettleUpModal({ 
+  isOpen, 
+  onClose, 
+  group, 
+  currentUser, 
+  onSettlementAdded, 
+  balances 
+}: SettleUpModalProps) {
   const [payeeId, setPayeeId] = useState('');
   const [amount, setAmount] = useState('');
   const [screenshot, setScreenshot] = useState<File | null>(null);
@@ -21,16 +28,30 @@ export default function SettleUpModal({ isOpen, onClose, group, currentUser, onS
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  // Find people the current user owes
-  const oweList = balances?.simplified?.filter((b: any) => b.from === currentUser.id.toString()) || [];
+  // Find debts where current user is the debtor
+  const oweList = balances?.simplified?.filter((b: any) => b.from?.toString() === currentUser.id.toString()) || [];
   
-  // Find users in the group that aren't the current user to allow paying anyone
+  // Group members other than current user
   const otherMembers = group.members?.filter(m => m.user.id !== currentUser.id) || [];
+
+  const handleClose = () => {
+    onClose();
+    setPayeeId('');
+    setAmount('');
+    setScreenshot(null);
+    setError('');
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!payeeId || !amount) {
-      setError('Please select a person and enter an amount');
+      setError('Please select a recipient and enter a valid settlement amount.');
+      return;
+    }
+
+    const parsedAmount = parseFloat(amount);
+    if (isNaN(parsedAmount) || parsedAmount <= 0) {
+      setError('Please enter a valid amount greater than 0.');
       return;
     }
 
@@ -38,8 +59,6 @@ export default function SettleUpModal({ isOpen, onClose, group, currentUser, onS
     setError('');
 
     try {
-      const parsedAmount = parseFloat(amount); // backend expects rupees
-      
       const formData = new FormData();
       formData.append('groupId', group.id.toString());
       formData.append('payeeId', payeeId);
@@ -51,13 +70,9 @@ export default function SettleUpModal({ isOpen, onClose, group, currentUser, onS
 
       await createSettlement(formData);
       onSettlementAdded();
-      onClose();
-      // Reset
-      setPayeeId('');
-      setAmount('');
-      setScreenshot(null);
+      handleClose();
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Failed to record settlement');
+      setError(err.response?.data?.message || err.response?.data?.error || 'Failed to record settlement');
     } finally {
       setLoading(false);
     }
@@ -65,88 +80,204 @@ export default function SettleUpModal({ isOpen, onClose, group, currentUser, onS
 
   const prefillOwed = (owedAmount: number, toId: string) => {
     setAmount((owedAmount / 100).toFixed(2));
-    setPayeeId(toId);
+    setPayeeId(toId.toString());
+    setError('');
   };
 
   return (
     <AnimatePresence>
       {isOpen && (
-        <motion.div className="settle-modal-overlay" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-          <motion.div className="settle-modal-content" initial={{ y: 50, scale: 0.95 }} animate={{ y: 0, scale: 1 }} exit={{ y: 50, scale: 0.95 }}>
-            <div className="modal-header">
-              <h2>Settle Up</h2>
-              <button className="close-btn" onClick={onClose}>&times;</button>
-            </div>
-            
-            {error && <div className="error-message">{error}</div>}
-
-            {oweList.length > 0 && (
-              <div className="suggested-payments">
-                <p>You owe:</p>
-                {oweList.map((b: any, idx: number) => {
-                  const toUser = group.members?.find(m => m.user.id.toString() === b.to?.toString())?.user;
-                  return (
-                    <button 
-                      key={idx}
-                      type="button" 
-                      className="suggested-payment-btn"
-                      onClick={() => prefillOwed(b.amount, b.to)}
-                    >
-                      Pay {toUser?.name || `User ${b.to}`} <strong>Rs. {(b.amount / 100).toFixed(2)}</strong>
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-            
-            <form onSubmit={handleSubmit}>
-              <div className="input-group">
-                <label>Pay To</label>
-                <select value={payeeId} onChange={e => setPayeeId(e.target.value)} required>
-                  <option value="" disabled>Select a person</option>
-                  {otherMembers.map(m => (
-                    <option key={m.user.id} value={m.user.id}>
-                      {m.user.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div className="input-group amount-group">
-                <label>Amount (Rs.)</label>
-                <div className="amount-input-wrapper">
-                  <span className="currency-symbol">Rs.</span>
-                  <input 
-                    type="number" 
-                    step="0.01"
-                    min="1"
-                    value={amount} 
-                    onChange={e => setAmount(e.target.value)} 
-                    placeholder="0.00"
-                    required
-                  />
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs font-['Plus_Jakarta_Sans',_sans-serif]"
+          onClick={handleClose}
+        >
+          <motion.div 
+            className="bg-white rounded-3xl w-full max-w-md overflow-hidden shadow-2xl border border-slate-100 flex flex-col max-h-[90vh]"
+            initial={{ opacity: 0, scale: 0.95, y: 15 }} 
+            animate={{ opacity: 1, scale: 1, y: 0 }} 
+            exit={{ opacity: 0, scale: 0.95, y: 15 }}
+            transition={{ duration: 0.2, ease: 'easeOut' }}
+            onClick={e => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="px-6 py-5 border-b border-slate-100 flex items-center justify-between bg-white sticky top-0 z-10">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center font-bold shadow-xs">
+                  <CreditCard size={20} />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-slate-900">Settle Up</h3>
+                  <p className="text-xs text-slate-400">Record a payment within {group.name}</p>
                 </div>
               </div>
+              <button 
+                onClick={handleClose}
+                className="p-2 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors"
+              >
+                <X size={20} />
+              </button>
+            </div>
 
-              <div className="input-group">
-                <label>Screenshot / Receipt (Optional)</label>
-                <input 
-                  type="file" 
-                  accept="image/*"
-                  onChange={e => setScreenshot(e.target.files?.[0] || null)} 
-                  className="file-input"
-                />
-              </div>
+            {/* Modal Body */}
+            <div className="p-6 overflow-y-auto space-y-5">
+              {error && (
+                <div className="text-rose-600 bg-rose-50 p-3.5 rounded-xl text-xs font-semibold border border-rose-100">
+                  {error}
+                </div>
+              )}
 
-              <div className="modal-actions">
-                <button type="button" className="btn-text" onClick={onClose}>Cancel</button>
-                <button type="submit" className="btn-primary" disabled={loading}>
-                  {loading ? 'Processing...' : 'Record Payment'}
-                </button>
-              </div>
-            </form>
+              {/* Suggested Quick Payments */}
+              {oweList.length > 0 && (
+                <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-4">
+                  <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-600 mb-2.5">
+                    <ArrowUpRight size={14} className="text-blue-600" />
+                    Quick Settle (You Owe)
+                  </div>
+                  <div className="space-y-2">
+                    {oweList.map((b: any, idx: number) => {
+                      const toUser = group.members?.find(m => m.user.id.toString() === b.to?.toString())?.user;
+                      const isSelected = payeeId === b.to?.toString();
+                      return (
+                        <button 
+                          key={idx}
+                          type="button" 
+                          className={`w-full flex items-center justify-between p-3 rounded-xl text-xs font-semibold transition-all border ${
+                            isSelected 
+                              ? 'bg-blue-600 text-white border-blue-600 shadow-sm' 
+                              : 'bg-white text-slate-700 border-slate-200 hover:border-blue-300 hover:bg-blue-50/40 shadow-2xs'
+                          }`}
+                          onClick={() => prefillOwed(b.amount, b.to)}
+                        >
+                          <span className="truncate pr-2">
+                            Pay <strong className="font-bold">{toUser?.name || `User ${b.to}`}</strong>
+                          </span>
+                          <span className={`font-mono font-bold ${isSelected ? 'text-white' : 'text-blue-600'}`}>
+                            Rs. {(b.amount / 100).toFixed(2)}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              <form onSubmit={handleSubmit} className="space-y-4">
+                {/* Payee Selection */}
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">
+                    Pay To
+                  </label>
+                  <div className="relative">
+                    <select 
+                      value={payeeId} 
+                      onChange={e => setPayeeId(e.target.value)} 
+                      className="w-full bg-slate-50 border border-slate-200 text-slate-900 rounded-xl px-4 py-3 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all cursor-pointer"
+                      required
+                    >
+                      <option value="" disabled>Select recipient</option>
+                      {otherMembers.map(m => (
+                        <option key={m.user.id} value={m.user.id}>
+                          {m.user.name} ({m.user.email})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                </div>
+
+                {/* Amount Input */}
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">
+                    Amount (PKR)
+                  </label>
+                  <div className="relative flex items-center">
+                    <span className="absolute left-4 text-sm font-bold text-slate-400 pointer-events-none">
+                      Rs.
+                    </span>
+                    <input 
+                      type="number" 
+                      step="0.01"
+                      min="1"
+                      value={amount} 
+                      onChange={e => setAmount(e.target.value)} 
+                      placeholder="0.00"
+                      className="w-full bg-slate-50 border border-slate-200 text-slate-900 rounded-xl pl-12 pr-4 py-3 text-sm font-mono font-bold focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all placeholder:text-slate-400"
+                      required
+                    />
+                  </div>
+                </div>
+
+                {/* Receipt Screenshot Upload */}
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">
+                    Payment Proof / Receipt <span className="text-slate-400 font-normal">(Optional)</span>
+                  </label>
+                  
+                  {screenshot ? (
+                    <div className="flex items-center justify-between p-3 bg-slate-50 border border-slate-200 rounded-xl">
+                      <div className="flex items-center gap-2.5 min-w-0 pr-2">
+                        <ImageIcon size={18} className="text-emerald-600 flex-shrink-0" />
+                        <span className="text-xs font-semibold text-slate-700 truncate">{screenshot.name}</span>
+                      </div>
+                      <button 
+                        type="button" 
+                        onClick={() => setScreenshot(null)}
+                        className="text-xs font-bold text-rose-500 hover:text-rose-700 p-1"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  ) : (
+                    <label className="flex flex-col items-center justify-center p-5 border-2 border-dashed border-slate-200 hover:border-emerald-400 rounded-2xl cursor-pointer bg-slate-50/50 hover:bg-emerald-50/30 transition-all">
+                      <Upload size={20} className="text-slate-400 mb-1.5" />
+                      <span className="text-xs font-semibold text-slate-600">Click to upload screenshot</span>
+                      <span className="text-[11px] text-slate-400 mt-0.5">PNG, JPG, JPEG up to 5MB</span>
+                      <input 
+                        type="file" 
+                        accept="image/*"
+                        onChange={e => setScreenshot(e.target.files?.[0] || null)} 
+                        className="hidden"
+                      />
+                    </label>
+                  )}
+                </div>
+
+                {/* Notice */}
+                <div className="bg-slate-50 px-4 py-3 rounded-2xl border border-slate-100 flex items-start gap-2.5">
+                  <Info size={16} className="text-slate-400 mt-0.5 flex-shrink-0" />
+                  <p className="text-xs text-slate-500 leading-relaxed">
+                    <strong className="font-semibold text-slate-700">Verification Required:</strong> Group balances will update automatically once the payee reviews and confirms receipt of this payment.
+                  </p>
+                </div>
+
+                {/* Modal Footer Actions */}
+                <div className="pt-3 border-t border-slate-100 flex items-center justify-end gap-2.5">
+                  <button 
+                    type="button" 
+                    onClick={handleClose}
+                    className="px-5 py-2.5 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 text-xs font-bold transition-all"
+                  >
+                    Cancel
+                  </button>
+                  <button 
+                    type="submit" 
+                    disabled={loading}
+                    className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-xl text-xs font-bold shadow-sm transition-all hover:shadow-md active:scale-95 disabled:opacity-50 flex items-center gap-1.5"
+                  >
+                    {loading ? (
+                      <>
+                        <Loader size={14} className="animate-spin" /> Recording...
+                      </>
+                    ) : (
+                      <>
+                        <CheckCircle2 size={14} /> Record Payment
+                      </>
+                    )}
+                  </button>
+                </div>
+              </form>
+            </div>
           </motion.div>
-        </motion.div>
+        </div>
       )}
     </AnimatePresence>
   );

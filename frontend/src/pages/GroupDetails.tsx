@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Loader, Users, Receipt, CreditCard, Copy, Check, Bell } from 'lucide-react';
+import { ArrowLeft, Loader, Users, Receipt, CreditCard, Copy, Check, Bell, UserPlus, X, Mail } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getGroupDetails, getGroupBalances } from '../api/groups';
 import { approveJoinRequest, rejectJoinRequest, inviteUser, removeMember, leaveGroup } from '../api/groups';
@@ -31,6 +31,7 @@ export default function GroupDetails() {
   const [isAddExpenseOpen, setIsAddExpenseOpen] = useState(false);
   const [isSettleUpOpen, setIsSettleUpOpen] = useState(false);
   const [isExpenseDetailOpen, setIsExpenseDetailOpen] = useState(false);
+  const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
   const [selectedExpenseId, setSelectedExpenseId] = useState<number | null>(null);
   const [editExpenseData, setEditExpenseData] = useState<any>(null);
   const [expenseRefreshTrigger, setExpenseRefreshTrigger] = useState(0);
@@ -160,10 +161,16 @@ export default function GroupDetails() {
   };
 
   useEffect(() => {
+    if (!searchQuery.trim()) {
+      setSearchResults([]);
+      setSearching(false);
+      return;
+    }
+
+    setSearching(true);
     const delayDebounceFn = setTimeout(async () => {
-      setSearching(true);
       try {
-        const results = await searchUsers(searchQuery);
+        const results = await searchUsers(searchQuery.trim());
         // filter out existing members
         const filtered = results.filter((u: any) => !group?.members?.some(m => m.user.id === u.id));
         setSearchResults(filtered);
@@ -242,25 +249,33 @@ export default function GroupDetails() {
 
       {/* Global Pending Settlements Section */}
       {settlements.filter(s => s.status === 'AWAITING_VERIFICATION').length > 0 && (
-        <div className="pending-settlements-section" style={{ margin: '0 2rem 1rem 2rem', padding: '1rem', background: 'rgba(255,165,0,0.1)', border: '1px solid rgba(255,165,0,0.3)', borderRadius: '8px' }}>
-          <h3 style={{ marginTop: 0, color: 'orange', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '1.1rem', marginBottom: '1rem' }}>
-            <CreditCard size={18} /> Pending Settlements Awaiting Verification
-          </h3>
-          <div className="settlements-list">
+        <div className="mb-6 p-5 bg-amber-50/80 border border-amber-200/90 rounded-3xl shadow-xs">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-amber-900 font-bold text-sm sm:text-base flex items-center gap-2">
+              <CreditCard size={18} className="text-amber-600" /> Pending Settlements Awaiting Verification
+            </h3>
+            <span className="text-[11px] font-bold uppercase tracking-wider bg-amber-100/90 text-amber-800 px-3 py-1 rounded-full">
+              {settlements.filter(s => s.status === 'AWAITING_VERIFICATION').length} Pending
+            </span>
+          </div>
+          <div className="space-y-3">
             {settlements.filter(s => s.status === 'AWAITING_VERIFICATION').map((s) => (
-              <div key={s.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(0,0,0,0.3)', padding: '1rem', borderRadius: '8px', marginBottom: '0.5rem' }}>
-                <div>
-                  <strong>{s.payer.name}</strong> paid <strong>{s.payee.name}</strong> 
-                  <span className="font-mono text-primary" style={{ marginLeft: '0.5rem', fontWeight: 'bold' }}>Rs. {(s.amount / 100).toFixed(2)}</span>
-                  <div style={{ fontSize: '0.8rem', color: '#aaa', marginTop: '0.25rem' }}>
+              <div key={s.id} className="bg-white border border-amber-100 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-xs">
+                <div className="flex-1 min-w-0 pr-2">
+                  <p className="text-sm font-semibold text-slate-800 break-words leading-relaxed">
+                    <span className="font-bold text-slate-900 break-all">{s.payer.name}</span> paid{' '}
+                    <span className="font-bold text-slate-900 break-all">{s.payee.name}</span>{' '}
+                    <span className="font-mono text-emerald-600 font-bold ml-1">Rs. {(s.amount / 100).toFixed(2)}</span>
+                  </p>
+                  <p className="text-xs text-slate-400 mt-1">
                     {new Date(s.createdAt).toLocaleString()}
-                  </div>
+                  </p>
                   {s.screenshotUrl && (
-                    <a href={`http://localhost:4000${s.screenshotUrl}`} target="_blank" rel="noreferrer" style={{ display: 'block', marginTop: '0.75rem' }}>
+                    <a href={`http://localhost:4000${s.screenshotUrl}`} target="_blank" rel="noreferrer" className="inline-block mt-2">
                       <img 
                         src={`http://localhost:4000${s.screenshotUrl}`} 
                         alt="Payment Screenshot" 
-                        style={{ maxHeight: '120px', borderRadius: '4px', border: '1px solid rgba(255,255,255,0.2)', objectFit: 'cover' }} 
+                        className="max-h-24 rounded-lg border border-slate-200 object-cover hover:opacity-90 transition-opacity" 
                         title="Click to view full size"
                       />
                     </a>
@@ -268,13 +283,23 @@ export default function GroupDetails() {
                 </div>
                 
                 {s.payee.id?.toString() === user?.id?.toString() ? (
-                  <div style={{ display: 'flex', gap: '0.5rem' }}>
-                    <button className="btn-primary" style={{ padding: '0.5rem 1rem', fontSize: '0.9rem' }} onClick={() => handleConfirmSettlement(s.id)}>Confirm</button>
-                    <button className="btn-secondary" style={{ padding: '0.5rem 1rem', fontSize: '0.9rem' }} onClick={() => handleRejectSettlement(s.id)}>Reject</button>
+                  <div className="flex items-center gap-2 self-end sm:self-auto flex-shrink-0">
+                    <button 
+                      className="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl text-xs font-bold shadow-sm transition-all active:scale-95 flex items-center gap-1.5" 
+                      onClick={() => handleConfirmSettlement(s.id)}
+                    >
+                      <Check size={14} /> Confirm
+                    </button>
+                    <button 
+                      className="bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 px-4 py-2 rounded-xl text-xs font-bold transition-all active:scale-95" 
+                      onClick={() => handleRejectSettlement(s.id)}
+                    >
+                      Reject
+                    </button>
                   </div>
                 ) : (
-                  <div style={{ fontSize: '0.85rem', color: 'orange', fontStyle: 'italic' }}>
-                    Awaiting {s.payee.name}'s verification
+                  <div className="text-xs font-medium text-amber-800 bg-amber-100/70 px-3 py-1.5 rounded-xl self-start sm:self-auto break-words">
+                    Awaiting <span className="font-bold break-all">{s.payee.name}</span>'s verification
                   </div>
                 )}
               </div>
@@ -345,7 +370,7 @@ export default function GroupDetails() {
                           <div className="balance-avatar from-avatar">
                             {fromUser?.name?.charAt(0).toUpperCase() || '?'}
                           </div>
-                          <span className="balance-name">{fromUser?.name || `User ${b.from}`}</span>
+                          <span className="balance-name break-words break-all max-w-[120px]">{fromUser?.name || `User ${b.from}`}</span>
                         </div>
                         
                         <div className="balance-connection">
@@ -358,7 +383,7 @@ export default function GroupDetails() {
                           <div className="balance-avatar to-avatar">
                             {toUser?.name?.charAt(0).toUpperCase() || '?'}
                           </div>
-                          <span className="balance-name">{toUser?.name || `User ${b.to}`}</span>
+                          <span className="balance-name break-words break-all max-w-[120px]">{toUser?.name || `User ${b.to}`}</span>
                         </div>
                         
                         {isCurrentUserOwes && (
@@ -434,66 +459,23 @@ export default function GroupDetails() {
                 </div>
               )}
 
-              {/* Admin Invite Section */}
-              {group.members?.find(m => m.user.id === user?.id)?.role === 'ADMIN' && (
-                <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm">
-                  <h3 className="text-lg font-bold text-slate-900 mb-4">Invite New Members</h3>
-                  
-                  {inviteError && <div className="text-rose-500 bg-rose-50 p-3 rounded-xl text-sm font-medium mb-4 border border-rose-100">{inviteError}</div>}
-                  {inviteSuccess && <div className="text-emerald-500 bg-emerald-50 p-3 rounded-xl text-sm font-medium mb-4 border border-emerald-100">{inviteSuccess}</div>}
-                  
-                  <div className="flex flex-col gap-2 relative">
-                    <input 
-                      type="text" 
-                      placeholder="Search by name or email..." 
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      className="w-full bg-slate-50 border border-slate-200 text-slate-900 rounded-xl px-4 py-3 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all placeholder:text-slate-400"
-                    />
-                    
-                    {searching && <div className="text-sm text-slate-400 mt-1">Searching...</div>}
-                    
-                    {searchResults.length > 0 && (
-                      <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl border border-slate-100 shadow-xl overflow-hidden z-10 max-h-48 overflow-y-auto">
-                        {searchResults.map(u => (
-                          <div key={u.id} className="flex justify-between items-center p-3 hover:bg-slate-50 border-b border-slate-100 last:border-0">
-                            <div>
-                              <div className="text-sm font-bold text-slate-900">{u.name}</div>
-                              <div className="text-xs text-slate-500">{u.email}</div>
-                            </div>
-                            <button 
-                              onClick={() => handleInviteUser(u.email)}
-                              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-1.5 rounded-lg text-xs font-semibold transition-colors shadow-sm"
-                            >
-                              Add
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                    {searchQuery.length > 0 && !searching && searchResults.length === 0 && (
-                      <div className="text-sm text-slate-400 mt-1">No matching registered users found.</div>
-                    )}
-                  </div>
-                  
-                  <div className="mt-6 pt-6 border-t border-slate-100">
-                    <h4 className="text-sm font-bold text-slate-900 mb-1">User not registered?</h4>
-                    <p className="text-xs text-slate-500 mb-3">Copy and share this link for them to register and join automatically.</p>
-                    <button 
-                      className="w-full flex items-center justify-center gap-2 bg-white border border-slate-200 text-slate-700 hover:bg-slate-50 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all shadow-sm active:scale-[0.98]"
-                      onClick={copyInviteLink}
-                    >
-                      {copied ? <Check size={16} className="text-emerald-500" /> : <Copy size={16} />}
-                      {copied ? 'Link Copied!' : 'Copy Invite Link'}
-                    </button>
-                  </div>
-                </div>
-              )}
-
               {/* Active Group Members */}
               {group.members?.some(m => m.user.id === user?.id) && (
                 <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm">
-                  <h3 className="text-lg font-bold text-slate-900 mb-4">Active Members ({group.members?.length})</h3>
+                  <div className="flex items-center justify-between mb-5">
+                    <div>
+                      <h3 className="text-lg font-bold text-slate-900">Active Members ({group.members?.length})</h3>
+                      <p className="text-xs text-slate-400">People currently in this group</p>
+                    </div>
+                    {group.members?.find(m => m.user.id === user?.id)?.role === 'ADMIN' && (
+                      <button 
+                        onClick={() => setIsInviteModalOpen(true)}
+                        className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl text-xs font-bold shadow-sm transition-all hover:shadow-md active:scale-95"
+                      >
+                        <UserPlus size={15} /> Invite Member
+                      </button>
+                    )}
+                  </div>
                 <div className="flex flex-col gap-3">
                   {group.members?.map((member) => (
                     <div key={member.user.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-2xl bg-slate-50 border border-slate-100 transition-all hover:border-slate-200 gap-4 sm:gap-0">
@@ -600,6 +582,160 @@ export default function GroupDetails() {
         balances={balances}
         onSettlementAdded={handleExpenseOrSettlementAdded}
       />
+
+      {/* Invite Member Modal */}
+      {isInviteModalOpen && (
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs animate-fade-in"
+          onClick={() => {
+            setIsInviteModalOpen(false);
+            setSearchQuery('');
+            setSearchResults([]);
+            setInviteError('');
+            setInviteSuccess('');
+          }}
+        >
+          <div 
+            className="bg-white rounded-3xl w-full max-w-lg overflow-hidden shadow-2xl border border-slate-100 flex flex-col max-h-[90vh]"
+            onClick={e => e.stopPropagation()}
+          >
+            {/* Modal Header */}
+            <div className="px-6 py-5 border-b border-slate-100 flex items-center justify-between bg-white sticky top-0 z-10">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center font-bold">
+                  <UserPlus size={20} />
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-slate-900">Invite Members</h3>
+                  <p className="text-xs text-slate-400">Add people to {group.name}</p>
+                </div>
+              </div>
+              <button 
+                onClick={() => {
+                  setIsInviteModalOpen(false);
+                  setSearchQuery('');
+                  setSearchResults([]);
+                  setInviteError('');
+                  setInviteSuccess('');
+                }}
+                className="p-2 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-6 overflow-y-auto space-y-6">
+              {inviteError && (
+                <div className="text-rose-600 bg-rose-50 p-3.5 rounded-xl text-xs font-semibold border border-rose-100">
+                  {inviteError}
+                </div>
+              )}
+              {inviteSuccess && (
+                <div className="text-emerald-600 bg-emerald-50 p-3.5 rounded-xl text-xs font-semibold border border-emerald-100">
+                  {inviteSuccess}
+                </div>
+              )}
+
+              {/* Search Registered Users */}
+              <div>
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">
+                  Search Registered Users
+                </label>
+                <div className="relative">
+                  <input 
+                    type="text" 
+                    placeholder="Search by name or email..." 
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full bg-slate-50 border border-slate-200 text-slate-900 rounded-xl px-4 py-3 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all placeholder:text-slate-400"
+                    autoFocus
+                  />
+                  {searching && (
+                    <div className="absolute right-3 top-3 text-xs text-slate-400 font-medium">
+                      Searching...
+                    </div>
+                  )}
+                </div>
+
+                {/* Search Results */}
+                {searchResults.length > 0 && (
+                  <div className="mt-3 bg-white rounded-2xl border border-slate-100 shadow-md divide-y divide-slate-100 max-h-52 overflow-y-auto">
+                    {searchResults.map(u => (
+                      <div key={u.id} className="flex justify-between items-center p-3.5 hover:bg-slate-50 transition-colors">
+                        <div className="flex items-center gap-3 min-w-0 pr-2">
+                          <div className="w-8 h-8 rounded-full bg-slate-100 text-slate-600 font-bold text-xs flex items-center justify-center flex-shrink-0">
+                            {u.name.charAt(0).toUpperCase()}
+                          </div>
+                          <div className="min-w-0">
+                            <div className="text-sm font-bold text-slate-900 truncate">{u.name}</div>
+                            <div className="text-xs text-slate-400 truncate">{u.email}</div>
+                          </div>
+                        </div>
+                        <button 
+                          onClick={() => handleInviteUser(u.email)}
+                          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-1.5 rounded-lg text-xs font-bold transition-all shadow-sm active:scale-95 flex-shrink-0"
+                        >
+                          Add
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {searchQuery.trim().length > 0 && !searching && searchResults.length === 0 && (
+                  <p className="text-xs text-slate-400 mt-2 italic">
+                    No matching users found. Share the link below to invite them!
+                  </p>
+                )}
+              </div>
+
+              {/* Share Code & Link */}
+              <div className="pt-5 border-t border-slate-100">
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">
+                  Share Group Invite Code
+                </label>
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="flex-1 bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 font-mono text-sm font-bold text-slate-800 tracking-wider">
+                    {group.inviteCode}
+                  </div>
+                  <button 
+                    onClick={copyInviteCode}
+                    className="flex items-center gap-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2.5 rounded-xl text-xs font-bold transition-all"
+                  >
+                    {copied ? <Check size={14} className="text-emerald-500" /> : <Copy size={14} />}
+                    {copied ? 'Copied' : 'Copy'}
+                  </button>
+                </div>
+
+                <button 
+                  className="w-full flex items-center justify-center gap-2 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 px-4 py-2.5 rounded-xl text-xs font-bold transition-all shadow-xs active:scale-95"
+                  onClick={copyInviteLink}
+                >
+                  <Mail size={14} />
+                  {copied ? 'Link Copied!' : 'Copy Direct Invite Link'}
+                </button>
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="px-6 py-4 border-t border-slate-100 bg-slate-50 flex justify-end">
+              <button 
+                onClick={() => {
+                  setIsInviteModalOpen(false);
+                  setSearchQuery('');
+                  setSearchResults([]);
+                  setInviteError('');
+                  setInviteSuccess('');
+                }}
+                className="bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 px-5 py-2 rounded-xl text-xs font-bold transition-all"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

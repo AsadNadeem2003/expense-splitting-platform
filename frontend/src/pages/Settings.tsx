@@ -6,7 +6,7 @@ import { Save, User as UserIcon, CreditCard, Globe } from 'lucide-react';
 import './Settings.css';
 
 const Settings = () => {
-  const { user } = useAuth();
+  const { user, updateUser } = useAuth();
   
   const [formData, setFormData] = useState({
     name: '',
@@ -38,11 +38,11 @@ const Settings = () => {
     setIsSaving(true);
     
     try {
-      await updateProfile(formData);
+      const updated = await updateProfile(formData);
+      updateUser(updated.data || formData);
       toast.success('Profile updated successfully');
-      // In a real app, we'd also update the AuthContext user state here
     } catch (err: any) {
-      toast.error(err.response?.data?.message || 'Failed to update profile');
+      toast.error(err.response?.data?.error || err.response?.data?.message || 'Failed to update profile');
     } finally {
       setIsSaving(false);
     }
@@ -79,9 +79,14 @@ const Settings = () => {
                   name="name" 
                   value={formData.name} 
                   onChange={handleChange} 
+                  maxLength={50}
                   className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
                   required
                 />
+                <div className="flex justify-between items-center mt-1">
+                  <span className="text-[11px] text-slate-400">Maximum 50 characters</span>
+                  <span className="text-[11px] text-slate-400">{formData.name.length}/50</span>
+                </div>
               </div>
               <div>
                 <label className="block text-sm font-semibold text-slate-700 mb-1">Email Address</label>
