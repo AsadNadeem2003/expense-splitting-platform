@@ -140,6 +140,24 @@ export const getDashboardStats = async (userId: number) => {
     orderBy: { createdAt: 'desc' }
   });
 
+  // 7. Get pending join requests for groups where user is an ADMIN
+  const adminGroups = await prisma.groupMember.findMany({
+    where: { userId, role: 'ADMIN' },
+    select: { groupId: true }
+  });
+  const adminGroupIds = adminGroups.map(g => g.groupId);
+
+  const pendingJoinRequests = adminGroupIds.length > 0 
+    ? await prisma.pendingJoinRequest.findMany({
+        where: { groupId: { in: adminGroupIds }, status: 'PENDING' },
+        include: {
+          group: { select: { id: true, name: true } },
+          user: { select: { id: true, name: true, email: true } }
+        },
+        orderBy: { createdAt: 'desc' }
+      })
+    : [];
+
   return {
     totalOwes,
     totalOwed,
@@ -147,7 +165,8 @@ export const getDashboardStats = async (userId: number) => {
     recentActivity,
     balancesBreakdown,
     remindersReceived,
-    pendingVerifications
+    pendingVerifications,
+    pendingJoinRequests
   };
 };
 

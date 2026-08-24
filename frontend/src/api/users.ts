@@ -28,6 +28,15 @@ export interface DashboardStats {
     group: { id: number; name: string };
     payer: { id: number; name: string };
   }[];
+  pendingJoinRequests?: {
+    id: number;
+    groupId: number;
+    userId: number;
+    status: string;
+    createdAt: string;
+    group: { id: number; name: string };
+    user: { id: number; name: string; email: string };
+  }[];
 }
 
 export const getDashboardStats = async (): Promise<DashboardStats> => {

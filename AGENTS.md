@@ -112,7 +112,7 @@ expense-splitting-platform/
    - **Swagger Production Guard**: Disables `/api-docs` and schema access when `NODE_ENV === 'production'`.
    - **Multer Armor**: Restricts uploads strictly to valid image MIME types (`jpeg`, `png`, `webp`) and file extensions with a 5MB limit.
    - **Strict CORS Origin Whitelisting**: Restricts API calls to permitted origins in production with `credentials: true`.
-   - **Short-Lived Access Tokens (15m)**: Stateless JWTs expire every 15 minutes to minimize window of vulnerability if intercepted.
+   - **Extended Access Tokens (1h)**: Stateless JWTs expire every 1 hour for smooth, uninterrupted usage while maintaining security.
    - **HttpOnly Secure Refresh Cookies (7d)**: Long-lived refresh tokens stored exclusively in `httpOnly`, `SameSite` cookies, making XSS token theft impossible.
    - **Silent Token Rotation (`/api/auth/refresh`)**: Axios response interceptor intercepts 401s, rotates the refresh cookie, updates access token in flight, and retries queued requests seamlessly.
    - **Secure Server Logout (`/api/auth/logout`)**: Explicitly clears httpOnly cookie on server and local storage on client.
@@ -126,10 +126,12 @@ expense-splitting-platform/
    - In `SettleUpModal`, selecting a recipient automatically displays their verified account with a 1-click **Copy Account** button.
    - Status defaults to `AWAITING_VERIFICATION` and only updates group balances upon explicit payee confirmation.
    - **Duplicate Settlement Prevention**: Backend blocks creating a new settlement if the same payer already has an `AWAITING_VERIFICATION` settlement with the same payee in the same group, preventing accidental double payments and inflated balances.
-6. **Interactive Notification Center (In-App Reminders & Verifications)**:
-   - Floating `NotificationsPopover` on top-right bell icon with live unread badge counter (`remindersReceived` + `pendingVerifications`).
+6. **Interactive Notification Center (In-App Reminders, Join Requests & Verifications)**:
+   - Floating `NotificationsPopover` on top-right bell icon with live unread badge counter (`remindersReceived` + `pendingVerifications` + `pendingJoinRequests`) and 15s live polling.
+   - Displays real-time **Group Join Requests** for group admins (e.g. *"Hassan Khan wants to join Kuch Bhi"*) with direct 1-click **Review & Approve →** action.
    - Displays incoming debtor nudges (e.g. *"Ahsan reminded you to settle your Rs. 1,454.55 debt in Kuch Bhi"*) with direct 1-click **Settle Up** action.
    - Displays incoming settlement verification requests with proof screenshot review links.
+   - **Instant User Invites**: The "Invite Member" modal auto-loads all registered platform users on open with 1-click **Add** button.
 7. **Automated 7-Day Settlement Reminders & UI Nudges**:
    - Daily cron job scans for unsettled expenses older than 7 days and dispatches email notifications.
    - Strict 7-day cooldown per debtor/creditor pair tracked via `SettlementReminderLog` table to prevent spamming.

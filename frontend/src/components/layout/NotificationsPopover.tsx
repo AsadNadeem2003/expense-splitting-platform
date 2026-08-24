@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Bell, X, CreditCard, Receipt, ArrowRight, Loader, AlertCircle, Clock } from 'lucide-react';
+import { Bell, X, CreditCard, Receipt, ArrowRight, Loader, AlertCircle, Clock, UserPlus } from 'lucide-react';
 import { getDashboardStats } from '../../api/users';
 import { useAuth } from '../../context/AuthContext';
 
@@ -14,6 +14,7 @@ export const NotificationsPopover: React.FC<NotificationsPopoverProps> = ({ onNo
   const [activities, setActivities] = useState<any[]>([]);
   const [reminders, setReminders] = useState<any[]>([]);
   const [pendingVerifications, setPendingVerifications] = useState<any[]>([]);
+  const [pendingJoinRequests, setPendingJoinRequests] = useState<any[]>([]);
   const { user } = useAuth();
   const navigate = useNavigate();
   const popoverRef = useRef<HTMLDivElement>(null);
@@ -31,8 +32,13 @@ export const NotificationsPopover: React.FC<NotificationsPopoverProps> = ({ onNo
       if (data?.pendingVerifications) {
         setPendingVerifications(data.pendingVerifications);
       }
+      if (data?.pendingJoinRequests) {
+        setPendingJoinRequests(data.pendingJoinRequests);
+      }
       
-      const totalAlerts = (data?.remindersReceived?.length || 0) + (data?.pendingVerifications?.length || 0);
+      const totalAlerts = (data?.remindersReceived?.length || 0) + 
+                          (data?.pendingVerifications?.length || 0) + 
+                          (data?.pendingJoinRequests?.length || 0);
       if (onNotificationCountChange) {
         onNotificationCountChange(totalAlerts);
       }
@@ -45,6 +51,8 @@ export const NotificationsPopover: React.FC<NotificationsPopoverProps> = ({ onNo
 
   useEffect(() => {
     fetchNotifications();
+    const interval = setInterval(fetchNotifications, 15000); // 15s auto-polling
+    return () => clearInterval(interval);
   }, [user]);
 
   // Click outside to close
@@ -62,7 +70,7 @@ export const NotificationsPopover: React.FC<NotificationsPopoverProps> = ({ onNo
     };
   }, [isOpen]);
 
-  const totalUnread = reminders.length + pendingVerifications.length;
+  const totalUnread = reminders.length + pendingVerifications.length + pendingJoinRequests.length;
 
   const formatRelative = (dateStr: string) => {
     const date = new Date(dateStr);
@@ -121,7 +129,49 @@ export const NotificationsPopover: React.FC<NotificationsPopoverProps> = ({ onNo
               </div>
             ) : (
               <>
-                {/* 1. Payment Reminders Received */}
+                {/* 1. Pending Group Join Requests (for Group Admins) */}
+                {pendingJoinRequests.length > 0 && (
+                  <div className="bg-violet-50/40 p-3 space-y-2">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-violet-700 px-2 flex items-center gap-1">
+                      <UserPlus size={12} /> Group Join Requests
+                    </span>
+                    {pendingJoinRequests.map((req) => (
+                      <div
+                        key={req.id}
+                        onClick={() => {
+                          setIsOpen(false);
+                          navigate(`/groups/${req.groupId}`);
+                        }}
+                        className="bg-white border border-violet-200/80 rounded-2xl p-3.5 shadow-2xs hover:border-violet-300 transition-all cursor-pointer"
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            <div className="w-8 h-8 rounded-full bg-violet-100 text-violet-600 font-bold text-xs flex items-center justify-center flex-shrink-0">
+                              {req.user?.name?.charAt(0).toUpperCase() || 'U'}
+                            </div>
+                            <div className="min-w-0">
+                              <p className="text-xs font-bold text-slate-900 truncate">
+                                {req.user?.name} wants to join
+                              </p>
+                              <p className="text-[11px] text-slate-500 truncate">
+                                Group: <strong className="text-slate-700">{req.group?.name}</strong> · {formatRelative(req.createdAt)}
+                              </p>
+                            </div>
+                          </div>
+                          <span className="text-[10px] uppercase font-bold text-violet-700 bg-violet-50 px-2 py-1 rounded-lg flex-shrink-0">
+                            Action Needed
+                          </span>
+                        </div>
+                        <div className="mt-2 pt-2 border-t border-slate-100 flex items-center justify-between">
+                          <span className="text-[10px] font-semibold text-slate-400">Invite Code Request</span>
+                          <span className="text-[11px] font-bold text-violet-600 hover:underline">Review & Approve →</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* 2. Payment Reminders Received */}
                 {reminders.length > 0 && (
                   <div className="bg-amber-50/40 p-3 space-y-2">
                     <span className="text-[10px] font-bold uppercase tracking-wider text-amber-700 px-2 flex items-center gap-1">
