@@ -112,14 +112,11 @@ const Settings = () => {
                   name="name" 
                   value={formData.name} 
                   onChange={handleChange} 
-                  maxLength={50}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all"
+                  maxLength={35}
+                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-900 font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500 focus:bg-white transition-all placeholder:text-slate-400"
+                  placeholder="Your full name"
                   required
                 />
-                <div className="flex justify-between items-center mt-1">
-                  <span className="text-[11px] text-slate-400">Maximum 50 characters</span>
-                  <span className="text-[11px] text-slate-400">{formData.name.length}/50</span>
-                </div>
               </div>
               <div>
                 <label className="block text-sm font-semibold text-slate-700 mb-1">Email Address</label>

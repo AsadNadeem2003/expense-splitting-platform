@@ -6,6 +6,28 @@ export interface DashboardStats {
   totalBalance: number;
   recentActivity: any[];
   balancesBreakdown: any[];
+  remindersReceived?: {
+    id: number;
+    groupId: number;
+    debtorId: number;
+    creditorId: number;
+    amount: number;
+    sentAt: string;
+    group: { id: number; name: string };
+    creditor: { id: number; name: string };
+  }[];
+  pendingVerifications?: {
+    id: number;
+    groupId: number;
+    payerId: number;
+    payeeId: number;
+    amount: number;
+    screenshotUrl?: string;
+    status: string;
+    createdAt: string;
+    group: { id: number; name: string };
+    payer: { id: number; name: string };
+  }[];
 }
 
 export const getDashboardStats = async (): Promise<DashboardStats> => {

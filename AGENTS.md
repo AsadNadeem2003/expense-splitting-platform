@@ -110,13 +110,14 @@ expense-splitting-platform/
    - In `SettleUpModal`, selecting a recipient automatically displays their verified account with a 1-click **Copy Account** button.
    - Status defaults to `AWAITING_VERIFICATION` and only updates group balances upon explicit payee confirmation.
    - **Duplicate Settlement Prevention**: Backend blocks creating a new settlement if the same payer already has an `AWAITING_VERIFICATION` settlement with the same payee in the same group, preventing accidental double payments and inflated balances.
-4. **Interactive Notification Center**:
-   - Floating `NotificationsPopover` on top-right bell icon with live unread badge counter.
-   - Shows pending settlement verification requests with direct access to group activity.
+4. **Interactive Notification Center (In-App Reminders & Verifications)**:
+   - Floating `NotificationsPopover` on top-right bell icon with live unread badge counter (`remindersReceived` + `pendingVerifications`).
+   - Displays incoming debtor nudges (e.g. *"Ahsan reminded you to settle your Rs. 1,454.55 debt in Kuch Bhi"*) with direct 1-click **Settle Up** action.
+   - Displays incoming settlement verification requests with proof screenshot review links.
 5. **Automated 7-Day Settlement Reminders & UI Nudges**:
    - Daily cron job scans for unsettled expenses older than 7 days and dispatches email notifications.
    - Strict 7-day cooldown per debtor/creditor pair tracked via `SettlementReminderLog` table to prevent spamming.
-   - Interactive `Remind` buttons on the Group Balances tab and Dashboard "You Are Owed" breakdown modal allow 1-click manual email nudges.
+   - Interactive `Remind` buttons on the Group Balances tab and Dashboard "You Are Owed" breakdown modal allow 1-click manual nudges dispatched via both email and in-app alerts.
 6. **Financial Intelligence & Analytics Feed**:
    - Activity page tracks complete user financial history: Total Settled Amount, Shared Expense Volume, and Active Groups.
    - Real-time search and filter chips for `All`, `Expenses`, and `Settlements`.

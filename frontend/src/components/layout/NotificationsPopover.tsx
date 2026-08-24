@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Bell, X, CreditCard, Receipt, ArrowRight, Loader } from 'lucide-react';
+import { Bell, X, CreditCard, Receipt, ArrowRight, Loader, AlertCircle, Clock } from 'lucide-react';
 import { getDashboardStats } from '../../api/users';
 import { useAuth } from '../../context/AuthContext';
 
@@ -12,7 +12,8 @@ export const NotificationsPopover: React.FC<NotificationsPopoverProps> = ({ onNo
   const [isOpen, setIsOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [activities, setActivities] = useState<any[]>([]);
-  const [pendingSettlements, setPendingSettlements] = useState<any[]>([]);
+  const [reminders, setReminders] = useState<any[]>([]);
+  const [pendingVerifications, setPendingVerifications] = useState<any[]>([]);
   const { user } = useAuth();
   const navigate = useNavigate();
   const popoverRef = useRef<HTMLDivElement>(null);
@@ -22,15 +23,18 @@ export const NotificationsPopover: React.FC<NotificationsPopoverProps> = ({ onNo
       setLoading(true);
       const data = await getDashboardStats();
       if (data?.recentActivity) {
-        setActivities(data.recentActivity.slice(0, 8));
+        setActivities(data.recentActivity.slice(0, 6));
       }
-      // Check for pending settlements or breakdown
-      if (data?.balancesBreakdown) {
-        const owedItems = data.balancesBreakdown.filter((b: any) => b.type === 'OWED');
-        setPendingSettlements(owedItems);
-        if (onNotificationCountChange) {
-          onNotificationCountChange(owedItems.length);
-        }
+      if (data?.remindersReceived) {
+        setReminders(data.remindersReceived);
+      }
+      if (data?.pendingVerifications) {
+        setPendingVerifications(data.pendingVerifications);
+      }
+      
+      const totalAlerts = (data?.remindersReceived?.length || 0) + (data?.pendingVerifications?.length || 0);
+      if (onNotificationCountChange) {
+        onNotificationCountChange(totalAlerts);
       }
     } catch (err) {
       console.error('Failed to load notifications', err);
@@ -58,7 +62,16 @@ export const NotificationsPopover: React.FC<NotificationsPopoverProps> = ({ onNo
     };
   }, [isOpen]);
 
-  const unreadCount = pendingSettlements.length;
+  const totalUnread = reminders.length + pendingVerifications.length;
+
+  const formatRelative = (dateStr: string) => {
+    const date = new Date(dateStr);
+    const now = new Date();
+    const diffHours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
+    if (diffHours < 1) return 'Just now';
+    if (diffHours < 24) return `${diffHours}h ago`;
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  };
 
   return (
     <div className="relative" ref={popoverRef}>
@@ -72,23 +85,23 @@ export const NotificationsPopover: React.FC<NotificationsPopoverProps> = ({ onNo
         title="Notifications"
       >
         <Bell size={20} />
-        {unreadCount > 0 && (
-          <span className="absolute top-1 right-1 min-w-[18px] h-[18px] bg-blue-600 text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1 border-2 border-white">
-            {unreadCount > 9 ? '9+' : unreadCount}
+        {totalUnread > 0 && (
+          <span className="absolute top-1 right-1 min-w-[18px] h-[18px] bg-blue-600 text-white text-[10px] font-bold rounded-full flex items-center justify-center px-1 border-2 border-white animate-pulse">
+            {totalUnread > 9 ? '9+' : totalUnread}
           </span>
         )}
       </button>
 
       {/* Floating Popover Card */}
       {isOpen && (
-        <div className="absolute right-0 mt-3 w-80 sm:w-96 bg-white border border-slate-100 rounded-3xl shadow-2xl z-50 overflow-hidden animate-fade-in font-['Plus_Jakarta_Sans',_sans-serif]">
+        <div className="absolute right-0 mt-3 w-84 sm:w-96 bg-white border border-slate-100 rounded-3xl shadow-2xl z-50 overflow-hidden animate-fade-in font-['Plus_Jakarta_Sans',_sans-serif]">
           {/* Popover Header */}
           <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
             <div className="flex items-center gap-2">
               <h4 className="text-sm font-bold text-slate-900">Notifications & Alerts</h4>
-              {unreadCount > 0 && (
-                <span className="bg-blue-100 text-blue-700 text-[10px] font-bold px-2 py-0.5 rounded-full">
-                  {unreadCount} Pending
+              {totalUnread > 0 && (
+                <span className="bg-blue-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-full">
+                  {totalUnread} New
                 </span>
               )}
             </div>
@@ -100,52 +113,133 @@ export const NotificationsPopover: React.FC<NotificationsPopoverProps> = ({ onNo
             </button>
           </div>
 
-          {/* Notifications List */}
-          <div className="max-h-[380px] overflow-y-auto divide-y divide-slate-100">
+          {/* Notifications Body */}
+          <div className="max-h-[390px] overflow-y-auto divide-y divide-slate-100">
             {loading ? (
               <div className="p-8 flex items-center justify-center text-slate-400">
                 <Loader size={20} className="animate-spin text-blue-600" />
               </div>
-            ) : activities.length === 0 ? (
-              <div className="p-8 text-center text-slate-400 text-xs">
-                No recent notifications found.
-              </div>
             ) : (
-              activities.map((item, idx) => (
-                <div
-                  key={item.id || idx}
-                  className="p-4 hover:bg-slate-50 transition-colors flex items-start gap-3 cursor-pointer"
-                  onClick={() => {
-                    setIsOpen(false);
-                    if (item.groupId) {
-                      navigate(`/groups/${item.groupId}`);
-                    } else {
-                      navigate('/activity');
-                    }
-                  }}
-                >
-                  <div className={`w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 text-xs font-bold ${
-                    item.type === 'SETTLEMENT' ? 'bg-emerald-50 text-emerald-600' : 'bg-blue-50 text-blue-600'
-                  }`}>
-                    {item.type === 'SETTLEMENT' ? <CreditCard size={15} /> : <Receipt size={15} />}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs font-semibold text-slate-900 truncate">
-                      {item.description}
-                    </p>
-                    <p className="text-[11px] text-slate-400 mt-0.5">
-                      {item.groupName} · {new Date(item.createdAt).toLocaleDateString()}
-                    </p>
-                  </div>
-                  <div className="text-right flex-shrink-0">
-                    <span className={`text-[11px] font-mono font-bold ${
-                      item.netImpact >= 0 ? 'text-emerald-600' : 'text-rose-600'
-                    }`}>
-                      {item.netImpact > 0 ? '+' : ''}Rs. {(Math.abs(item.netImpact) / 100).toFixed(2)}
+              <>
+                {/* 1. Payment Reminders Received */}
+                {reminders.length > 0 && (
+                  <div className="bg-amber-50/40 p-3 space-y-2">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-amber-700 px-2 flex items-center gap-1">
+                      <Clock size={12} /> Payment Reminders
                     </span>
+                    {reminders.map(rem => (
+                      <div
+                        key={rem.id}
+                        onClick={() => {
+                          setIsOpen(false);
+                          navigate(`/groups/${rem.groupId}`);
+                        }}
+                        className="bg-white border border-amber-200/80 rounded-2xl p-3.5 shadow-2xs hover:border-amber-300 transition-all cursor-pointer"
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <div>
+                            <p className="text-xs font-bold text-slate-900">
+                              {rem.creditor?.name} reminded you to pay
+                            </p>
+                            <p className="text-[11px] text-slate-500 mt-0.5">
+                              In {rem.group?.name} · {formatRelative(rem.sentAt)}
+                            </p>
+                          </div>
+                          <span className="text-xs font-mono font-extrabold text-amber-700 bg-amber-50 px-2 py-1 rounded-lg">
+                            Rs. {(rem.amount / 100).toFixed(2)}
+                          </span>
+                        </div>
+                        <div className="mt-2 pt-2 border-t border-slate-100 flex items-center justify-between">
+                          <span className="text-[10px] font-semibold text-slate-400">7-day debt nudge</span>
+                          <span className="text-[11px] font-bold text-blue-600 hover:underline">Settle Up →</span>
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                </div>
-              ))
+                )}
+
+                {/* 2. Pending Verification Requests */}
+                {pendingVerifications.length > 0 && (
+                  <div className="bg-blue-50/30 p-3 space-y-2">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-blue-700 px-2 flex items-center gap-1">
+                      <AlertCircle size={12} /> Awaiting Your Confirmation
+                    </span>
+                    {pendingVerifications.map(pv => (
+                      <div
+                        key={pv.id}
+                        onClick={() => {
+                          setIsOpen(false);
+                          navigate(`/groups/${pv.groupId}`);
+                        }}
+                        className="bg-white border border-blue-200/80 rounded-2xl p-3.5 shadow-2xs hover:border-blue-300 transition-all cursor-pointer"
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <div>
+                            <p className="text-xs font-bold text-slate-900">
+                              {pv.payer?.name} recorded a payment
+                            </p>
+                            <p className="text-[11px] text-slate-500 mt-0.5">
+                              In {pv.group?.name} · {formatRelative(pv.createdAt)}
+                            </p>
+                          </div>
+                          <span className="text-xs font-mono font-extrabold text-blue-700 bg-blue-50 px-2 py-1 rounded-lg">
+                            Rs. {(pv.amount / 100).toFixed(2)}
+                          </span>
+                        </div>
+                        <div className="mt-2 pt-2 border-t border-slate-100 flex items-center justify-between">
+                          <span className="text-[10px] font-semibold text-slate-400">Review proof receipt</span>
+                          <span className="text-[11px] font-bold text-blue-600 hover:underline">Verify Payment →</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* 3. Recent Activity Stream */}
+                {activities.length > 0 ? (
+                  activities.map((item, idx) => (
+                    <div
+                      key={item.id || idx}
+                      className="p-4 hover:bg-slate-50 transition-colors flex items-start gap-3 cursor-pointer"
+                      onClick={() => {
+                        setIsOpen(false);
+                        if (item.groupId) {
+                          navigate(`/groups/${item.groupId}`);
+                        } else {
+                          navigate('/activity');
+                        }
+                      }}
+                    >
+                      <div className={`w-8 h-8 rounded-xl flex items-center justify-center flex-shrink-0 text-xs font-bold ${
+                        item.type === 'SETTLEMENT' ? 'bg-emerald-50 text-emerald-600' : 'bg-blue-50 text-blue-600'
+                      }`}>
+                        {item.type === 'SETTLEMENT' ? <CreditCard size={15} /> : <Receipt size={15} />}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-semibold text-slate-900 truncate">
+                          {item.description}
+                        </p>
+                        <p className="text-[11px] text-slate-400 mt-0.5">
+                          {item.groupName} · {new Date(item.createdAt).toLocaleDateString()}
+                        </p>
+                      </div>
+                      <div className="text-right flex-shrink-0">
+                        <span className={`text-[11px] font-mono font-bold ${
+                          item.netImpact >= 0 ? 'text-emerald-600' : 'text-rose-600'
+                        }`}>
+                          {item.netImpact > 0 ? '+' : ''}Rs. {(Math.abs(item.netImpact) / 100).toFixed(2)}
+                        </span>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  reminders.length === 0 && pendingVerifications.length === 0 && (
+                    <div className="p-8 text-center text-slate-400 text-xs">
+                      No notifications found.
+                    </div>
+                  )
+                )}
+              </>
             )}
           </div>
 

@@ -92,23 +92,25 @@ export const getDashboardStats = async (userId: number) => {
       type: 'EXPENSE',
       amount: exp.totalAmount, // Total expense amount
       netImpact: netImpact, // How it affected this specific user
-      description: exp.description,
-      groupName: exp.group.name,
+      description: exp.description || 'Expense',
+      groupName: exp.group?.name || 'Group',
       createdAt: exp.createdAt,
-      actionText: isPayer ? 'You paid' : `${exp.paidBy.name} paid`
+      actionText: isPayer ? 'You paid' : `${exp.paidBy?.name || 'Someone'} paid`
     });
   }
 
   for (const st of settlements) {
     const isPayer = st.payerId === userId;
+    const payerName = st.payer?.name || 'User';
+    const payeeName = st.payee?.name || 'User';
     
     activities.push({
       id: `st-${st.id}`,
       type: 'SETTLEMENT',
       amount: st.amount,
       netImpact: isPayer ? st.amount : -st.amount, // if you pay, your net balance goes up. If you receive, it goes down.
-      description: isPayer ? `You paid ${st.payee.name}` : `${st.payer.name} paid you`,
-      groupName: st.group.name,
+      description: isPayer ? `You paid ${payeeName}` : `${payerName} paid you`,
+      groupName: st.group?.name || 'Group',
       createdAt: st.createdAt,
       actionText: isPayer ? 'You settled' : 'Settlement received'
     });
@@ -117,12 +119,35 @@ export const getDashboardStats = async (userId: number) => {
   activities.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   const recentActivity = activities.slice(0, 10);
 
+  // 5. Get reminders received by this user (where user is the debtor)
+  const remindersReceived = await prisma.settlementReminderLog.findMany({
+    where: { debtorId: userId },
+    include: {
+      group: { select: { id: true, name: true } },
+      creditor: { select: { id: true, name: true } }
+    },
+    orderBy: { sentAt: 'desc' },
+    take: 10
+  });
+
+  // 6. Get pending settlements where user is the payee and needs to verify
+  const pendingVerifications = await prisma.settlement.findMany({
+    where: { payeeId: userId, status: 'AWAITING_VERIFICATION' },
+    include: {
+      group: { select: { id: true, name: true } },
+      payer: { select: { id: true, name: true } }
+    },
+    orderBy: { createdAt: 'desc' }
+  });
+
   return {
     totalOwes,
     totalOwed,
     totalBalance,
     recentActivity,
-    balancesBreakdown
+    balancesBreakdown,
+    remindersReceived,
+    pendingVerifications
   };
 };
 
@@ -204,8 +229,8 @@ export const getActivityFeed = async (userId: number, limit: number = 50) => {
         type: 'EXPENSE',
         amount: exp.totalAmount,
         netImpact: netImpact,
-        description: exp.description,
-        groupName: exp.group.name,
+        description: exp.description || 'Expense',
+        groupName: exp.group?.name || 'Group',
         groupId: exp.groupId,
         createdAt: exp.createdAt,
         actionText: actionText
@@ -214,19 +239,21 @@ export const getActivityFeed = async (userId: number, limit: number = 50) => {
 
   for (const st of settlements) {
     const isPayer = st.payerId === userId;
+    const payerName = st.payer?.name || 'User';
+    const payeeName = st.payee?.name || 'User';
     
     activities.push({
       id: `st-${st.id}`,
       type: 'SETTLEMENT',
       amount: st.amount,
       netImpact: isPayer ? st.amount : -st.amount,
-      description: isPayer ? `You paid ${st.payee.name}` : `${st.payer.name} paid you`,
-      groupName: st.group.name,
+      description: isPayer ? `You paid ${payeeName}` : `${payerName} paid you`,
+      groupName: st.group?.name || 'Group',
       groupId: st.groupId,
       createdAt: st.createdAt,
       actionText: isPayer 
-        ? `You settled up with ${st.payee.name}` 
-        : `${st.payer.name} settled up with you`
+        ? `You settled up with ${payeeName}` 
+        : `${payerName} settled up with you`
     });
   }
 
