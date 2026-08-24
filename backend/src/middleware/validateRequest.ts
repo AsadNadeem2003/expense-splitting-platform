@@ -8,8 +8,11 @@ const validateRequest = (schema: ZodSchema<any>) => {
       next();
     } catch (error) {
       if (error instanceof ZodError) {
+        const firstMessage = error.issues[0]?.message || 'Validation failed';
         res.status(400).json({
-          error: "Validation failed",
+          status: 'fail',
+          message: firstMessage,
+          error: firstMessage,
           details: error.issues
         });
         return;

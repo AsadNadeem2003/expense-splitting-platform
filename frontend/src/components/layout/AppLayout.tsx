@@ -1,15 +1,17 @@
 import { useState } from 'react';
 import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Users, CreditCard, Settings, LogOut, Plus } from 'lucide-react';
+import { LayoutDashboard, Users, CreditCard, Settings, LogOut, Plus, HelpCircle } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import NotificationsPopover from './NotificationsPopover';
 import GlobalAddExpenseModal from '../expenses/GlobalAddExpenseModal';
+import { AlgorithmExplainerModal } from '../modals/AlgorithmExplainerModal';
 
 const AppLayout = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [isGlobalExpenseOpen, setIsGlobalExpenseOpen] = useState(false);
+  const [isAlgorithmModalOpen, setIsAlgorithmModalOpen] = useState(false);
 
   const handleLogout = () => {
     logout();
@@ -97,14 +99,23 @@ const AppLayout = () => {
                 Welcome, {user?.name?.split(' ')[0] || 'User'}
               </h2>
             </div>
-            <div className="flex items-center gap-3 sm:gap-5">
+            <div className="flex items-center gap-2.5 sm:gap-4">
+              {/* Algorithm Explainer Help Button */}
+              <button
+                onClick={() => setIsAlgorithmModalOpen(true)}
+                className="text-slate-400 hover:text-blue-600 transition-colors p-2 rounded-xl hover:bg-slate-100 relative cursor-pointer"
+                title="How Debt Simplification Works"
+              >
+                <HelpCircle size={20} />
+              </button>
+
               {/* Interactive Notifications Popover */}
               <NotificationsPopover />
 
               {showNewExpenseBtn && (
                 <button 
                   onClick={() => setIsGlobalExpenseOpen(true)} 
-                  className="hidden sm:flex items-center gap-1.5 bg-blue-600 text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-blue-700 active:scale-[0.98] transition-all shadow-md shadow-blue-600/15"
+                  className="hidden sm:flex items-center gap-1.5 bg-blue-600 text-white px-4 py-2 rounded-xl text-xs font-bold hover:bg-blue-700 active:scale-[0.98] transition-all shadow-md shadow-blue-600/15 cursor-pointer"
                 >
                   <Plus size={15} /> Add Expense
                 </button>
@@ -119,6 +130,12 @@ const AppLayout = () => {
             </div>
           </div>
         </header>
+
+        {/* Global Modals */}
+        <AlgorithmExplainerModal 
+          isOpen={isAlgorithmModalOpen} 
+          onClose={() => setIsAlgorithmModalOpen(false)} 
+        />
 
         {/* Canvas Area */}
         <div className="pt-24 px-4 sm:px-8 max-w-5xl mx-auto">

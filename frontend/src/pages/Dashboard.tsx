@@ -6,6 +6,7 @@ import { getDashboardStats } from '../api/users';
 import type { DashboardStats } from '../api/users';
 import BalancesBreakdownModal from '../components/dashboard/BalancesBreakdownModal';
 import GlobalAddExpenseModal from '../components/expenses/GlobalAddExpenseModal';
+import { OnboardingGuide } from '../components/dashboard/OnboardingGuide';
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -80,15 +81,30 @@ const Dashboard = () => {
     return 'text-slate-400';
   })();
 
-  return (
-    <div className="animate-fade-in w-full font-['Plus_Jakarta_Sans',_sans-serif]">
+  const isNewUser = (!stats?.recentActivity || stats.recentActivity.length === 0) && 
+    (stats?.totalBalance === 0) && 
+    (stats?.totalOwes === 0) && 
+    (stats?.totalOwed === 0);
 
+  return (
+    <div className="animate-fade-in font-['Plus_Jakarta_Sans',_sans-serif]">
+      {/* ─── Balances Breakdown Modal ─── */}
       <BalancesBreakdownModal 
         isOpen={breakdownModalState.isOpen}
         onClose={() => setBreakdownModalState({ ...breakdownModalState, isOpen: false })}
         type={breakdownModalState.type}
         breakdown={stats?.balancesBreakdown || []}
       />
+
+      {/* ─── Onboarding Guide for New Users ─── */}
+      {isNewUser && (
+        <OnboardingGuide
+          userName={firstName}
+          onCreateGroupClick={() => navigate('/groups')}
+          onJoinGroupClick={() => navigate('/groups')}
+          onAddExpenseClick={() => setIsAddExpenseOpen(true)}
+        />
+      )}
 
       {/* ─── Hero Card: Total Balance ─── */}
       <section className="mb-8">

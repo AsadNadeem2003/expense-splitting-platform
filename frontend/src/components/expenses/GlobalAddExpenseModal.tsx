@@ -228,7 +228,7 @@ export const GlobalAddExpenseModal: React.FC<GlobalAddExpenseModalProps> = ({
                     placeholder="e.g. Dinner, Groceries, Utilities"
                     value={description}
                     onChange={e => setDescription(e.target.value)}
-                    maxLength={100}
+                    maxLength={60}
                     className="w-full bg-slate-50 border border-slate-200 text-slate-900 rounded-xl px-4 py-3 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all placeholder:text-slate-400"
                     required
                   />

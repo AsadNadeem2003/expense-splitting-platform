@@ -282,6 +282,26 @@ router.delete('/:groupId/members/:userId', groupAccessMiddleware, groupControlle
  *       403:
  *         description: Not a member of this group
  */
-router.delete('/:groupId/leave', groupAccessMiddleware, groupController.leaveGroup);
+/**
+ * @swagger
+ * /api/groups/{groupId}:
+ *   delete:
+ *     summary: Delete a group and cascade delete all its records (Admin/Creator only)
+ *     tags: [Groups]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: groupId
+ *         required: true
+ *         schema:
+ *           type: integer
+ *     responses:
+ *       200:
+ *         description: Group deleted successfully
+ *       403:
+ *         description: Not authorized to delete this group
+ */
+router.delete('/:groupId', groupAccessMiddleware, groupController.deleteGroup);
 
 export default router;

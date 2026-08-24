@@ -1,10 +1,9 @@
 import { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 import { useParams, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Loader, Users, Receipt, CreditCard, Copy, Check, Bell, UserPlus, X, Mail } from 'lucide-react';
+import { ArrowLeft, Loader, Users, Receipt, CreditCard, Copy, Check, Bell, UserPlus, X, Mail, Trash2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { getGroupDetails, getGroupBalances } from '../api/groups';
-import { approveJoinRequest, rejectJoinRequest, inviteUser, removeMember, leaveGroup } from '../api/groups';
+import { getGroupDetails, getGroupBalances, approveJoinRequest, rejectJoinRequest, inviteUser, removeMember, leaveGroup, deleteGroup } from '../api/groups';
 import { getGroupSettlements, confirmSettlement, rejectSettlement, sendReminder } from '../api/settlements';
 import { searchUsers } from '../api/users';
 import { useAuth } from '../context/AuthContext';
@@ -13,6 +12,7 @@ import ExpenseList from '../components/expenses/ExpenseList';
 import AddExpenseModal from '../components/expenses/AddExpenseModal';
 import SettleUpModal from '../components/settlements/SettleUpModal';
 import ExpenseDetailModal from '../components/expenses/ExpenseDetailModal';
+import AlgorithmExplainerModal from '../components/modals/AlgorithmExplainerModal';
 import './GroupDetails.css';
 
 export default function GroupDetails() {
@@ -32,6 +32,9 @@ export default function GroupDetails() {
   const [isSettleUpOpen, setIsSettleUpOpen] = useState(false);
   const [isExpenseDetailOpen, setIsExpenseDetailOpen] = useState(false);
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
+  const [isAlgorithmModalOpen, setIsAlgorithmModalOpen] = useState(false);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const [selectedExpenseId, setSelectedExpenseId] = useState<number | null>(null);
   const [editExpenseData, setEditExpenseData] = useState<any>(null);
   const [expenseRefreshTrigger, setExpenseRefreshTrigger] = useState(0);
@@ -199,6 +202,21 @@ export default function GroupDetails() {
     }
   };
 
+  const handleDeleteGroup = async () => {
+    if (!group) return;
+    try {
+      setIsDeleting(true);
+      await deleteGroup(group.id);
+      toast.success('Group deleted successfully');
+      navigate('/groups');
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || err.response?.data?.error || 'Failed to delete group');
+    } finally {
+      setIsDeleting(false);
+      setIsDeleteModalOpen(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="group-loading">
@@ -210,6 +228,8 @@ export default function GroupDetails() {
   if (!group || !user) {
     return <div className="error-message">Group not found</div>;
   }
+
+  const isGroupAdmin = user.id === group.createdById || group.members?.some(m => m.user.id === user.id && m.role === 'ADMIN');
 
   return (
     <div className="group-details-container">
@@ -230,19 +250,28 @@ export default function GroupDetails() {
               </div>
             </div>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
             <button 
-              className="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl text-sm font-semibold shadow-sm transition-all hover:shadow-md active:scale-[0.98]" 
+              className="flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 sm:px-5 py-2.5 rounded-xl text-sm font-semibold shadow-sm transition-all hover:shadow-md active:scale-[0.98] cursor-pointer" 
               onClick={() => setIsAddExpenseOpen(true)}
             >
               <Receipt size={16} /> Add Expense
             </button>
             <button 
-              className="flex items-center justify-center gap-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 px-5 py-2.5 rounded-xl text-sm font-semibold shadow-sm transition-all hover:shadow-md active:scale-[0.98]" 
+              className="flex items-center justify-center gap-2 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 px-4 sm:px-5 py-2.5 rounded-xl text-sm font-semibold shadow-sm transition-all hover:shadow-md active:scale-[0.98] cursor-pointer" 
               onClick={() => setIsSettleUpOpen(true)}
             >
               <CreditCard size={16} /> Settle Up
             </button>
+            {isGroupAdmin && (
+              <button 
+                className="flex items-center justify-center gap-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 px-3.5 py-2.5 rounded-xl text-sm font-semibold shadow-xs transition-all active:scale-[0.98] cursor-pointer" 
+                onClick={() => setIsDeleteModalOpen(true)}
+                title="Delete this group permanently"
+              >
+                <Trash2 size={16} />
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -370,7 +399,7 @@ export default function GroupDetails() {
                           <div className="balance-avatar from-avatar">
                             {fromUser?.name?.charAt(0).toUpperCase() || '?'}
                           </div>
-                          <span className="balance-name break-words break-all max-w-[120px]">{fromUser?.name || `User ${b.from}`}</span>
+                          <span className="balance-name truncate max-w-[130px]" title={fromUser?.name}>{fromUser?.name || `User ${b.from}`}</span>
                         </div>
                         
                         <div className="balance-connection">
@@ -383,7 +412,7 @@ export default function GroupDetails() {
                           <div className="balance-avatar to-avatar">
                             {toUser?.name?.charAt(0).toUpperCase() || '?'}
                           </div>
-                          <span className="balance-name break-words break-all max-w-[120px]">{toUser?.name || `User ${b.to}`}</span>
+                          <span className="balance-name truncate max-w-[130px]" title={toUser?.name}>{toUser?.name || `User ${b.to}`}</span>
                         </div>
                         
                         {isCurrentUserOwes && (
@@ -728,7 +757,7 @@ export default function GroupDetails() {
                   setInviteError('');
                   setInviteSuccess('');
                 }}
-                className="bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 px-5 py-2 rounded-xl text-xs font-bold transition-all"
+                className="bg-white hover:bg-slate-100 text-slate-700 border border-slate-200 px-5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer"
               >
                 Close
               </button>
@@ -736,6 +765,51 @@ export default function GroupDetails() {
           </div>
         </div>
       )}
+
+      {/* Delete Group Confirmation Modal */}
+      {isDeleteModalOpen && (
+        <div 
+          className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center z-50 p-4 font-['Plus_Jakarta_Sans',_sans-serif]"
+          onClick={() => setIsDeleteModalOpen(false)}
+        >
+          <div 
+            className="bg-white rounded-3xl p-6 w-full max-w-md shadow-2xl border border-slate-100 animate-fade-in"
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="w-12 h-12 rounded-2xl bg-rose-50 text-rose-600 flex items-center justify-center font-bold mb-4">
+              <Trash2 size={24} />
+            </div>
+            <h3 className="text-lg font-bold text-slate-900 mb-1">Delete "{group.name}"?</h3>
+            <p className="text-xs text-slate-500 mb-6 leading-relaxed">
+              This action is permanent and cannot be undone. All expenses, settlements, and member balances in this group will be deleted immediately.
+            </p>
+            <div className="flex justify-end gap-2.5">
+              <button 
+                type="button" 
+                className="px-4 py-2.5 text-xs font-bold text-slate-600 hover:text-slate-800 transition-colors rounded-xl hover:bg-slate-50 cursor-pointer" 
+                onClick={() => setIsDeleteModalOpen(false)}
+                disabled={isDeleting}
+              >
+                Cancel
+              </button>
+              <button 
+                type="button" 
+                className="px-5 py-2.5 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold shadow-sm transition-all active:scale-95 disabled:opacity-70 cursor-pointer flex items-center gap-1.5" 
+                onClick={handleDeleteGroup}
+                disabled={isDeleting}
+              >
+                {isDeleting ? 'Deleting...' : 'Yes, Delete Group'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Algorithm Explainer Modal */}
+      <AlgorithmExplainerModal
+        isOpen={isAlgorithmModalOpen}
+        onClose={() => setIsAlgorithmModalOpen(false)}
+      />
     </div>
   );
 }

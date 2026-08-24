@@ -42,26 +42,35 @@
   display: flex;
   align-items: center;
   gap: 1.5rem;
+  max-width: 100%;
+  min-width: 0;
+  flex: 1 1 300px;
 }
 
 .group-icon-large {
-  width: 80px;
-  height: 80px;
+  width: 72px;
+  height: 72px;
   border-radius: 20px;
-  background: linear-gradient(135deg, rgba(108, 92, 231, 0.2), rgba(108, 92, 231, 0.05));
-  border: 1px solid rgba(108, 92, 231, 0.2);
+  background: linear-gradient(135deg, rgba(37, 99, 235, 0.12), rgba(59, 130, 246, 0.04));
+  border: 1px solid rgba(37, 99, 235, 0.15);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: 700;
-  color: var(--primary-accent);
-  font-size: 2rem;
+  font-weight: 800;
+  color: #2563eb;
+  font-size: 1.75rem;
+  flex-shrink: 0;
 }
 
 .group-title-info h1 {
   margin: 0 0 0.5rem;
-  font-size: 2.5rem;
-  font-weight: 700;
+  font-size: clamp(1.5rem, 2.5vw, 2.25rem);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: #0f172a;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  line-height: 1.2;
 }
 
 .invite-code-pill {
@@ -246,37 +255,44 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.75rem;
-  width: 120px;
+  gap: 0.5rem;
+  width: 140px;
+  max-width: 140px;
   text-align: center;
 }
 
 .balance-avatar {
-  width: 56px;
-  height: 56px;
+  width: 52px;
+  height: 52px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.5rem;
+  font-size: 1.35rem;
   font-weight: 700;
   color: white;
 }
 
 .from-avatar {
-  background: #ff6b6b;
-  box-shadow: 0 0 15px rgba(255, 107, 107, 0.3);
+  background: #f43f5e;
+  box-shadow: 0 4px 12px rgba(244, 63, 94, 0.25);
 }
 
 .to-avatar {
-  background: #2ecc71;
-  box-shadow: 0 0 15px rgba(46, 204, 113, 0.3);
+  background: #10b981;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
 }
 
 .balance-name {
-  font-weight: 600;
-  color: var(--text-primary);
-  font-size: 1.1rem;
+  font-weight: 700;
+  color: #0f172a;
+  font-size: 0.85rem;
+  width: 100%;
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: block;
 }
 
 .balance-connection {

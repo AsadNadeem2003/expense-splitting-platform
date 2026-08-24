@@ -50,3 +50,8 @@ export const leaveGroup = async (groupId: number) => {
   const response = await apiClient.delete(`/groups/${groupId}/leave`);
   return response.data;
 };
+
+export const deleteGroup = async (groupId: number) => {
+  const response = await apiClient.delete(`/groups/${groupId}`);
+  return response.data;
+};

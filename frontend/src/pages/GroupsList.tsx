@@ -248,13 +248,23 @@ export default function GroupsList() {
                     onChange={e => setNewGroupName(e.target.value)} 
                     placeholder="e.g. Flat 204 Roommates"
                     required
-                    maxLength={50}
+                    maxLength={35}
                     className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 font-semibold placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
                   />
                 </div>
                 <div className="flex justify-end gap-2">
-                  <button type="button" className="px-4 py-2.5 text-xs font-bold text-slate-500 hover:text-slate-700 transition-colors rounded-xl hover:bg-slate-50" onClick={() => setIsCreateModalOpen(false)}>Cancel</button>
-                  <button type="submit" className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-sm transition-all active:scale-95 disabled:opacity-70" disabled={actionLoading}>
+                  <button 
+                    type="button" 
+                    className="px-4 py-2.5 text-xs font-bold text-slate-500 hover:text-slate-700 transition-colors rounded-xl hover:bg-slate-50 cursor-pointer" 
+                    onClick={() => {
+                      setIsCreateModalOpen(false);
+                      setError('');
+                      setNewGroupName('');
+                    }}
+                  >
+                    Cancel
+                  </button>
+                  <button type="submit" className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-sm transition-all active:scale-95 disabled:opacity-70 cursor-pointer" disabled={actionLoading}>
                     {actionLoading ? 'Creating...' : 'Create Group'}
                   </button>
                 </div>

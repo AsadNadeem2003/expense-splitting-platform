@@ -94,3 +94,11 @@ export const removeMember = async (req: GroupAuthRequest, res: Response, next: N
     res.status(200).json({ status: 'success', data: result });
   } catch (error) { next(error); }
 };
+
+export const deleteGroup = async (req: AuthRequest, res: Response, next: NextFunction) => {
+  try {
+    const groupId = parseInt(req.params.groupId as string, 10);
+    const result = await groupService.deleteGroup(req.user!.id, groupId);
+    res.status(200).json({ status: 'success', data: result });
+  } catch (error) { next(error); }
+};

@@ -230,3 +230,46 @@ export const removeMember = async (adminId: number, groupId: number, userIdToRem
 
   return { message: 'Member removed successfully' };
 };
+
+export const deleteGroup = async (userId: number, groupId: number) => {
+  const group = await prisma.group.findUnique({
+    where: { id: groupId }
+  });
+  if (!group) {
+    throw new Error('Group not found');
+  }
+
+  // Check if user is the creator or an ADMIN
+  const membership = await prisma.groupMember.findUnique({
+    where: { groupId_userId: { groupId, userId } }
+  });
+
+  if (group.createdById !== userId && (!membership || membership.role !== 'ADMIN')) {
+    throw new Error('Only the group creator or group admin can delete this group');
+  }
+
+  // Cascade delete all dependent relational records in a transaction
+  return prisma.$transaction(async (tx) => {
+    // 1. Delete reminders
+    await tx.settlementReminderLog.deleteMany({ where: { groupId } });
+    // 2. Delete settlements
+    await tx.settlement.deleteMany({ where: { groupId } });
+    // 3. Find expenses in this group
+    const expenses = await tx.expense.findMany({ where: { groupId }, select: { id: true } });
+    const expenseIds = expenses.map(e => e.id);
+    if (expenseIds.length > 0) {
+      await tx.expenseEditHistory.deleteMany({ where: { expenseId: { in: expenseIds } } });
+      await tx.expensePayer.deleteMany({ where: { expenseId: { in: expenseIds } } });
+      await tx.expenseParticipant.deleteMany({ where: { expenseId: { in: expenseIds } } });
+      await tx.expense.deleteMany({ where: { groupId } });
+    }
+    // 4. Delete pending requests
+    await tx.pendingJoinRequest.deleteMany({ where: { groupId } });
+    // 5. Delete group members
+    await tx.groupMember.deleteMany({ where: { groupId } });
+    // 6. Delete group
+    await tx.group.delete({ where: { id: groupId } });
+
+    return { message: 'Group deleted successfully' };
+  });
+};
