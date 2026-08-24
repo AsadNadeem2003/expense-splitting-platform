@@ -34,3 +34,8 @@ backend/.env.production
 # If you use SQLite locally, ignore the dev database file
 backend/prisma/*.db
 backend/prisma/*.db-journal
+
+# Uploaded Files
+backend/public/uploads/
+backend/uploads/
+
