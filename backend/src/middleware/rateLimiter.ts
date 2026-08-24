@@ -22,12 +22,12 @@ export const globalApiLimiter = rateLimit({
  */
 export const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 10,
+  max: 50,
   standardHeaders: true,
   legacyHeaders: false,
   message: {
     status: 'fail',
-    message: 'Too many authentication attempts. Please try again in 15 minutes.',
+    message: 'Too many authentication attempts. Please try again in a few minutes.',
   },
 });
 

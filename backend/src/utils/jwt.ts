@@ -1,6 +1,6 @@
 import jwt from 'jsonwebtoken';
 
-const ACCESS_TOKEN_EXPIRY = '15m'; // Security best practice for active sessions
+const ACCESS_TOKEN_EXPIRY = '1h'; // Extended to 1 hour for smooth, uninterrupted sessions
 const REFRESH_TOKEN_EXPIRY = '7d';
 
 export const generateAccessToken = (userId: number): string => {
