@@ -182,6 +182,14 @@ RESEND_API_KEY="re_xxxxxxx"
 
 ---
 
+## 🚀 AWS EC2 Production & CI/CD Architecture
+- **Server**: AWS EC2 `t3.micro` / `t3.small` (Ubuntu 24.04 LTS).
+- **Web Server / Reverse Proxy**: Nginx routing `/` to `/var/www/splitease/frontend/dist` and `/api/` to `http://127.0.0.1:4000`.
+- **Process Manager**: PM2 running Node.js backend (`pm2 start "npx tsx src/index.ts" --name "splitease-api"`).
+- **Automated CI/CD**: GitHub Actions workflow ([`.github/workflows/deploy.yml`](file:///.github/workflows/deploy.yml)) auto-deploys to EC2 over SSH on every `git push origin main`.
+
+---
+
 ## 🛡️ Coding Guidelines for Agents & Engineers
 - **Zero Floating-Point Math**: Always use integer paisa arithmetic for balance operations.
 - **Database Transactions**: Any mutation involving multiple tables (e.g. expense creation, expense editing, member removal) must use `prisma.$transaction`.

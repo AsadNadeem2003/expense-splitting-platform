@@ -113,15 +113,15 @@ export default function GroupsList() {
             Manage shared expenses across {groups.length} {groups.length === 1 ? 'group' : 'groups'}
           </p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2.5 sm:gap-3 w-full sm:w-auto">
           <button 
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 text-slate-700 text-xs font-bold hover:bg-slate-50 transition-all active:scale-95"
+            className="flex-1 sm:flex-initial flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 text-slate-700 text-xs font-bold hover:bg-slate-50 transition-all active:scale-95 cursor-pointer"
             onClick={() => setIsJoinModalOpen(true)}
           >
             <Hash size={15} /> Join Group
           </button>
           <button 
-            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white shadow-sm text-xs font-bold transition-all hover:shadow-md active:scale-95"
+            className="flex-1 sm:flex-initial flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white shadow-sm text-xs font-bold transition-all hover:shadow-md active:scale-95 cursor-pointer"
             onClick={() => setIsCreateModalOpen(true)}
           >
             <Plus size={15} /> New Group

@@ -245,12 +245,12 @@ const Activity = () => {
               return (
                 <div 
                   key={activity.id} 
-                  className="p-5 flex items-start justify-between gap-4 hover:bg-slate-50 transition-colors cursor-pointer"
+                  className="p-4 sm:p-5 flex items-center justify-between gap-3 sm:gap-4 hover:bg-slate-50 transition-colors cursor-pointer"
                   onClick={() => navigate(`/groups/${activity.groupId}`)}
                 >
-                  <div className="flex items-start gap-4 min-w-0 flex-1">
+                  <div className="flex items-center gap-3 sm:gap-4 min-w-0 flex-1">
                     {/* Left: Avatar Badge */}
-                    <div className="relative flex-shrink-0 mt-0.5">
+                    <div className="relative flex-shrink-0">
                       <div className="w-10 h-10 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-600 font-bold text-xs">
                         {initials}
                       </div>
@@ -261,14 +261,14 @@ const Activity = () => {
 
                     {/* Center: Details */}
                     <div className="flex-1 min-w-0 overflow-hidden">
-                      <p className="text-sm text-slate-800 leading-snug truncate">
+                      <p className="text-xs sm:text-sm text-slate-800 leading-snug truncate">
                         {renderNaturalText(activity)}
                       </p>
                       <div className="flex items-center gap-2 mt-1">
-                        <span className="text-[11px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-slate-100 text-slate-500">
+                        <span className="text-[10px] sm:text-[11px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-slate-100 text-slate-500">
                           {activity.type}
                         </span>
-                        <span className="text-xs text-slate-400">
+                        <span className="text-[11px] sm:text-xs text-slate-400">
                           {getRelativeTime(activity.createdAt)}
                         </span>
                       </div>
@@ -276,8 +276,8 @@ const Activity = () => {
                   </div>
 
                   {/* Right: Net Impact */}
-                  <div className="text-right flex-shrink-0 self-center">
-                    <span className={`text-xs font-mono font-bold px-3 py-1.5 rounded-xl inline-block ${
+                  <div className="text-right flex-shrink-0">
+                    <span className={`text-[11px] sm:text-xs font-mono font-bold px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-xl inline-block ${
                       activity.netImpact > 0 
                         ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' 
                         : activity.netImpact < 0 

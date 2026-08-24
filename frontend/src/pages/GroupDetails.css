@@ -435,13 +435,13 @@
   }
   
   .group-title-info h1 {
-    font-size: 2rem;
+    font-size: 1.75rem;
   }
   
   .group-icon-large {
-    width: 60px;
-    height: 60px;
-    font-size: 1.5rem;
+    width: 56px;
+    height: 56px;
+    font-size: 1.35rem;
   }
   
   .group-actions {
@@ -462,6 +462,36 @@
   .tab {
     white-space: nowrap;
     padding: 0.5rem 0;
+    font-size: 0.9rem;
+  }
+
+  .balance-card-pro {
+    padding: 1.25rem 0.875rem;
+    gap: 0.5rem;
+  }
+
+  .balance-person {
+    width: 85px;
+    max-width: 85px;
+  }
+
+  .balance-name {
+    font-size: 0.75rem;
+    max-width: 85px;
+  }
+
+  .balance-avatar {
+    width: 42px;
+    height: 42px;
+    font-size: 1.1rem;
+  }
+
+  .balance-connection {
+    padding: 0 0.5rem;
+  }
+
+  .balance-amount {
+    font-size: 0.85rem !important;
   }
   
   .balance-item {

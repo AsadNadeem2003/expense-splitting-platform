@@ -25,13 +25,13 @@ export const OnboardingGuide: React.FC<OnboardingGuideProps> = ({
 
       {/* Header */}
       <div className="relative z-10 mb-6">
-        <span className="inline-block bg-blue-500/20 text-blue-300 text-[11px] font-bold uppercase tracking-wider px-3 py-1 rounded-full border border-blue-400/20 mb-3">
+        <span className="inline-block bg-blue-500/25 text-blue-200 text-[11px] font-extrabold uppercase tracking-wider px-3.5 py-1 rounded-full border border-blue-400/30 mb-3 shadow-xs">
           Quick Start Guide
         </span>
-        <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight">
+        <h2 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-white">
           Welcome to SplitEase, {userName || 'Friend'}!
         </h2>
-        <p className="text-sm text-slate-300 mt-1 max-w-xl">
+        <p className="text-sm text-slate-200 mt-1 max-w-xl font-medium">
           Get started with effortless expense splitting and automated debt simplification in 3 easy steps.
         </p>
       </div>
@@ -45,7 +45,7 @@ export const OnboardingGuide: React.FC<OnboardingGuideProps> = ({
               1
             </div>
             <h4 className="text-base font-bold text-white mb-1">Create or Join a Group</h4>
-            <p className="text-xs text-slate-300 leading-relaxed mb-4">
+            <p className="text-xs text-slate-200 leading-relaxed mb-4 font-normal">
               Set up a group circle for roommates, a road trip, or office lunches.
             </p>
           </div>
@@ -58,7 +58,7 @@ export const OnboardingGuide: React.FC<OnboardingGuideProps> = ({
             </button>
             <button
               onClick={onJoinGroupClick}
-              className="bg-white/10 hover:bg-white/20 text-slate-200 px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 border border-white/10 active:scale-95 cursor-pointer"
+              className="bg-white/10 hover:bg-white/20 text-slate-100 px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 border border-white/10 active:scale-95 cursor-pointer"
             >
               <Hash size={14} /> Join
             </button>
@@ -72,13 +72,13 @@ export const OnboardingGuide: React.FC<OnboardingGuideProps> = ({
               2
             </div>
             <h4 className="text-base font-bold text-white mb-1">Invite Friends</h4>
-            <p className="text-xs text-slate-300 leading-relaxed mb-4">
+            <p className="text-xs text-slate-200 leading-relaxed mb-4 font-normal">
               Share your group's unique 6-character invite code for instant 1-click joining.
             </p>
           </div>
           <button
             onClick={() => navigate('/groups')}
-            className="w-full bg-white/10 hover:bg-white/20 text-slate-200 px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 border border-white/10 active:scale-95 cursor-pointer"
+            className="w-full bg-white/10 hover:bg-white/20 text-slate-100 px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 border border-white/10 active:scale-95 cursor-pointer"
           >
             <Users size={14} /> View Groups & Codes
           </button>
@@ -91,7 +91,7 @@ export const OnboardingGuide: React.FC<OnboardingGuideProps> = ({
               3
             </div>
             <h4 className="text-base font-bold text-white mb-1">Log First Expense</h4>
-            <p className="text-xs text-slate-300 leading-relaxed mb-4">
+            <p className="text-xs text-slate-200 leading-relaxed mb-4 font-normal">
               Split bills equally or unequally—debts are simplified automatically.
             </p>
           </div>

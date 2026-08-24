@@ -121,7 +121,7 @@ const Dashboard = () => {
               </div>
               <span className="text-xs font-semibold uppercase tracking-wider text-slate-500">Total Balance</span>
             </div>
-            <h2 className="text-5xl font-extrabold tracking-tight text-slate-900">
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold tracking-tight text-slate-900 truncate">
               {stats?.totalBalance && stats.totalBalance > 0 ? '+' : ''}Rs. {((stats?.totalBalance || 0) / 100).toFixed(2)}
             </h2>
             <p className={`text-xs mt-2 font-medium ${balanceSubtextColor}`}>
@@ -132,18 +132,18 @@ const Dashboard = () => {
       </section>
 
       {/* ─── Stat Cards: You Owe / You Are Owed ─── */}
-      <section className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-8">
+      <section className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5 mb-8">
         {/* You Owe */}
         <button 
           onClick={() => setBreakdownModalState({ isOpen: true, type: 'OWES' })}
-          className="bg-white border border-slate-100 shadow-[0_8px_30px_rgb(15,23,42,0.04)] rounded-3xl p-6 flex items-center gap-5 transition-all hover:shadow-[0_8px_30px_rgb(15,23,42,0.07)] hover:-translate-y-1 text-left w-full cursor-pointer"
+          className="bg-white border border-slate-100 shadow-[0_8px_30px_rgb(15,23,42,0.04)] rounded-3xl p-5 sm:p-6 flex items-center gap-4 sm:gap-5 transition-all hover:shadow-[0_8px_30px_rgb(15,23,42,0.07)] hover:-translate-y-1 text-left w-full cursor-pointer"
         >
           <div className="w-12 h-12 rounded-2xl bg-rose-50 flex items-center justify-center flex-shrink-0">
             <MoveUpRight className="text-rose-600" size={20} />
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">You Owe</p>
-            <h3 className="text-2xl font-extrabold tracking-tight text-slate-900">
+            <h3 className="text-xl sm:text-2xl font-extrabold tracking-tight text-slate-900 truncate">
               Rs. {((stats?.totalOwes || 0) / 100).toFixed(2)}
             </h3>
           </div>
@@ -155,14 +155,14 @@ const Dashboard = () => {
         {/* You Are Owed */}
         <button 
           onClick={() => setBreakdownModalState({ isOpen: true, type: 'OWED' })}
-          className="bg-white border border-slate-100 shadow-[0_8px_30px_rgb(15,23,42,0.04)] rounded-3xl p-6 flex items-center gap-5 transition-all hover:shadow-[0_8px_30px_rgb(15,23,42,0.07)] hover:-translate-y-1 text-left w-full cursor-pointer"
+          className="bg-white border border-slate-100 shadow-[0_8px_30px_rgb(15,23,42,0.04)] rounded-3xl p-5 sm:p-6 flex items-center gap-4 sm:gap-5 transition-all hover:shadow-[0_8px_30px_rgb(15,23,42,0.07)] hover:-translate-y-1 text-left w-full cursor-pointer"
         >
           <div className="w-12 h-12 rounded-2xl bg-emerald-50 flex items-center justify-center flex-shrink-0">
             <MoveDownLeft className="text-emerald-600" size={20} />
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">You Are Owed</p>
-            <h3 className="text-2xl font-extrabold tracking-tight text-slate-900">
+            <h3 className="text-xl sm:text-2xl font-extrabold tracking-tight text-slate-900 truncate">
               Rs. {((stats?.totalOwed || 0) / 100).toFixed(2)}
             </h3>
           </div>
@@ -174,7 +174,7 @@ const Dashboard = () => {
 
       {/* ─── Quick Actions Row ─── */}
       <section className="mb-10">
-        <div className="flex items-center gap-6">
+        <div className="flex items-center justify-between sm:justify-start gap-3 sm:gap-6">
           {[
             { icon: DollarSign, label: 'Pay', color: 'text-blue-600', bg: 'bg-blue-50', onClick: () => setBreakdownModalState({ isOpen: true, type: 'OWES' }) },
             { icon: UserPlus, label: 'Request', color: 'text-violet-600', bg: 'bg-violet-50', onClick: () => setBreakdownModalState({ isOpen: true, type: 'OWED' }) },
@@ -184,12 +184,12 @@ const Dashboard = () => {
             <button
               key={action.label}
               onClick={action.onClick}
-              className="flex flex-col items-center gap-2 group cursor-pointer"
+              className="flex flex-col items-center gap-1.5 sm:gap-2 group cursor-pointer flex-1 sm:flex-initial"
             >
-              <div className={`w-14 h-14 rounded-full ${action.bg} flex items-center justify-center transition-all duration-200 group-hover:scale-105 group-active:scale-95 shadow-sm`}>
-                <action.icon className={action.color} size={22} />
+              <div className={`w-12 h-12 sm:w-14 sm:h-14 rounded-2xl sm:rounded-full ${action.bg} flex items-center justify-center transition-all duration-200 group-hover:scale-105 group-active:scale-95 shadow-sm`}>
+                <action.icon className={action.color} size={20} />
               </div>
-              <span className="text-xs font-semibold text-slate-600">{action.label}</span>
+              <span className="text-[11px] sm:text-xs font-semibold text-slate-600">{action.label}</span>
             </button>
           ))}
         </div>
