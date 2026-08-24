@@ -27,28 +27,49 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   });
 
   useEffect(() => {
-    // Check for token on mount
-    const storedToken = localStorage.getItem('token');
-    const storedUserStr = localStorage.getItem('user');
+    const initAuth = async () => {
+      const storedToken = localStorage.getItem('token');
+      const storedUserStr = localStorage.getItem('user');
 
-    if (storedToken && storedUserStr) {
+      if (storedToken && storedUserStr) {
+        try {
+          const user = JSON.parse(storedUserStr);
+          setState({
+            user,
+            token: storedToken,
+            isAuthenticated: true,
+            isLoading: false,
+          });
+          return;
+        } catch (e) {
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+        }
+      }
+
+      // If no stored token, attempt silent session recovery via httpOnly cookie
       try {
-        const user = JSON.parse(storedUserStr);
+        const response = await authApi.refreshToken();
+        const { user, accessToken } = response.data;
+        localStorage.setItem('token', accessToken);
+        localStorage.setItem('user', JSON.stringify(user));
         setState({
           user,
-          token: storedToken,
+          token: accessToken,
           isAuthenticated: true,
           isLoading: false,
         });
-      } catch (e) {
-        // If JSON parse fails, clear everything
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
-        setState(prev => ({ ...prev, isLoading: false }));
+      } catch (err) {
+        setState({
+          user: null,
+          token: null,
+          isAuthenticated: false,
+          isLoading: false,
+        });
       }
-    } else {
-      setState(prev => ({ ...prev, isLoading: false }));
-    }
+    };
+
+    initAuth();
   }, []);
 
   const login = async (email: string, password?: string) => {
@@ -90,7 +111,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     });
   };
 
-  const logout = () => {
+  const logout = async () => {
+    try {
+      await authApi.logout();
+    } catch (err) {
+      // Ignore network failure on logout
+    }
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     setState({

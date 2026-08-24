@@ -58,20 +58,22 @@ expense-splitting-platform/
 ├── AGENTS.md                   # Engineering guide & Agent operating manual
 ├── .gitignore                  # Git ignore rules (protects backend/.env)
 ├── docs/                       # Architectural diagrams & specifications
-│   ├── ARCHITECTURE.md
-│   └── implementation_plan.md
+│   ├── ARCHITECTURE.md         # System Topology & Stack Specification
+│   ├── ERD_DATA_MODELS.md      # Database ERD & Schema Reference
+│   ├── DEBT_SIMPLIFICATION_ENGINE.md # Mathematical Foundations & Graph Algorithm
+│   └── SEQUENCE_DIAGRAMS.md    # Core Workflow Sequence Diagrams
 ├── backend/
 │   ├── prisma/
 │   │   └── schema.prisma       # Database schema (User, Group, Expense, Settlement, etc.)
 │   ├── src/
 │   │   ├── config/             # Prisma client, Swagger OpenAPI, Cron jobs
 │   │   ├── controllers/        # Request handlers (auth, group, expense, settlement, user)
-│   │   ├── middleware/         # authMiddleware, groupAccess, validateRequest, upload, errorHandler
+│   │   ├── middleware/         # authMiddleware, groupAccess, validateRequest, rateLimiter, upload, errorHandler
 │   │   ├── routes/             # Express API routes
 │   │   ├── services/           # Business logic & algorithms (balance, expense, reminder, email)
 │   │   ├── utils/              # JWT, money (rupeeToPaisa/paisaToRupee), inviteCode generator
 │   │   ├── validators/         # Zod schemas (auth, group, expense, settlement, user)
-│   │   └── index.ts            # Server entry point
+│   │   └── index.ts            # Server entry point with Helmet & Rate Limiters
 │   ├── package.json
 │   ├── tsconfig.json
 │   └── .env.example            # Environment variables template
@@ -79,9 +81,10 @@ expense-splitting-platform/
     ├── src/
     │   ├── api/                # Type-safe Axios client & endpoints
     │   ├── components/         # Reusable UI components (expenses, settlements, dashboard, layout)
-    │   │   ├── dashboard/      # BalancesBreakdownModal
+    │   │   ├── dashboard/      # BalancesBreakdownModal, OnboardingGuide
     │   │   ├── expenses/       # AddExpenseModal, ExpenseDetailModal, ExpenseList, GlobalAddExpenseModal
     │   │   ├── layout/         # AppLayout, NotificationsPopover, ProtectedRoute
+    │   │   ├── modals/         # AlgorithmExplainerModal
     │   │   └── settlements/    # SettleUpModal
     │   ├── context/            # AuthContext (user session, login, register, updateUser, logout)
     │   ├── pages/              # Dashboard, GroupsList, GroupDetails, Activity, Settings, Login
@@ -100,32 +103,45 @@ expense-splitting-platform/
 1. **Authentication & Authorization**:
    - JWT authentication (`accessToken` stored in `localStorage`).
    - Group-level Role-Based Access Control (`ADMIN` vs `MEMBER`) enforced via `groupAccessMiddleware`.
-2. **Multi-Payer & Multi-Participant Expense Splitting**:
+2. **Group Lifecycle & Cascade Deletion**:
+   - Admins and creators can delete groups (`DELETE /api/groups/:groupId`).
+   - Execution uses atomic `prisma.$transaction` cascading across expenses, payers, participants, edit histories, settlements, reminders, and memberships.
+3. **Security Hardening (Phase 1 & Phase 2)**:
+   - **Global Security Headers (`helmet`)**: Protects against clickjacking, MIME sniffing, and disables `X-Powered-By`.
+   - **Rate Limiting (`express-rate-limit`)**: Enforces 10 req/15min on auth endpoints, 20 req/15min on group invites, and 300 req/15min globally.
+   - **Swagger Production Guard**: Disables `/api-docs` and schema access when `NODE_ENV === 'production'`.
+   - **Multer Armor**: Restricts uploads strictly to valid image MIME types (`jpeg`, `png`, `webp`) and file extensions with a 5MB limit.
+   - **Strict CORS Origin Whitelisting**: Restricts API calls to permitted origins in production with `credentials: true`.
+   - **Short-Lived Access Tokens (15m)**: Stateless JWTs expire every 15 minutes to minimize window of vulnerability if intercepted.
+   - **HttpOnly Secure Refresh Cookies (7d)**: Long-lived refresh tokens stored exclusively in `httpOnly`, `SameSite` cookies, making XSS token theft impossible.
+   - **Silent Token Rotation (`/api/auth/refresh`)**: Axios response interceptor intercepts 401s, rotates the refresh cookie, updates access token in flight, and retries queued requests seamlessly.
+   - **Secure Server Logout (`/api/auth/logout`)**: Explicitly clears httpOnly cookie on server and local storage on client.
+4. **Multi-Payer & Multi-Participant Expense Splitting**:
    - Supports single payer or multiple payers splitting expenses unequally or equally among participants.
    - Deletion is restricted to the expense creator or primary payer and cascades across dependent relations.
    - Immutable audit trail (`ExpenseEditHistory`) logs changes (`oldValue` vs `newValue` snapshots).
    - Instant global expense creation from header and dashboard with group selection.
-3. **Structured Payment Details & Settlement Flow**:
+5. **Structured Payment Details & Settlement Flow**:
    - Users configure structured payment receiving accounts in Settings (**EasyPaisa**, **JazzCash**, **Raast ID**, **Nayapay**, **Sadapay**, or **Bank IBAN**).
    - In `SettleUpModal`, selecting a recipient automatically displays their verified account with a 1-click **Copy Account** button.
    - Status defaults to `AWAITING_VERIFICATION` and only updates group balances upon explicit payee confirmation.
    - **Duplicate Settlement Prevention**: Backend blocks creating a new settlement if the same payer already has an `AWAITING_VERIFICATION` settlement with the same payee in the same group, preventing accidental double payments and inflated balances.
-4. **Interactive Notification Center (In-App Reminders & Verifications)**:
+6. **Interactive Notification Center (In-App Reminders & Verifications)**:
    - Floating `NotificationsPopover` on top-right bell icon with live unread badge counter (`remindersReceived` + `pendingVerifications`).
    - Displays incoming debtor nudges (e.g. *"Ahsan reminded you to settle your Rs. 1,454.55 debt in Kuch Bhi"*) with direct 1-click **Settle Up** action.
    - Displays incoming settlement verification requests with proof screenshot review links.
-5. **Automated 7-Day Settlement Reminders & UI Nudges**:
+7. **Automated 7-Day Settlement Reminders & UI Nudges**:
    - Daily cron job scans for unsettled expenses older than 7 days and dispatches email notifications.
    - Strict 7-day cooldown per debtor/creditor pair tracked via `SettlementReminderLog` table to prevent spamming.
    - Interactive `Remind` buttons on the Group Balances tab and Dashboard "You Are Owed" breakdown modal allow 1-click manual nudges dispatched via both email and in-app alerts.
-6. **Financial Intelligence & Analytics Feed**:
+8. **Financial Intelligence & Analytics Feed**:
    - Activity page tracks complete user financial history: Total Settled Amount, Shared Expense Volume, and Active Groups.
    - Real-time search and filter chips for `All`, `Expenses`, and `Settlements`.
    - Text overflow protection with `truncate` and `overflow-hidden` on all user-generated content.
-7. **Mobile-First Responsive Layout**:
+9. **Mobile-First Responsive Layout**:
    - Floating mobile bottom navigation bar on screens `< 768px` for Dashboard, Groups, Quick Add, Activity, and Settings.
    - Fluid card grids and responsive paddings across mobile, tablet, and desktop.
-8. **Groups Page (Card Grid Layout)**:
+10. **Groups Page (Card Grid Layout)**:
    - Financial summary row (Active Groups count, You Are Owed, You Owe).
    - Responsive card grid with gradient-colored group avatars, creation dates, and member counts.
    - Clean modals for Create Group and Join Group with input validation.

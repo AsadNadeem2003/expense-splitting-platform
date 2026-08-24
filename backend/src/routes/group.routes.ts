@@ -3,6 +3,7 @@ import * as groupController from '../controllers/group.controller';
 import validateRequest from '../middleware/validateRequest';
 import { authMiddleware } from '../middleware/auth.middleware';
 import { groupAccessMiddleware } from '../middleware/groupAccess.middleware';
+import { inviteLimiter } from '../middleware/rateLimiter';
 import { createGroupSchema, joinGroupSchema, inviteUserSchema } from '../validators/group.schema';
 
 const router = Router();
@@ -173,7 +174,7 @@ router.get('/:groupId/balances', groupAccessMiddleware, groupController.getBalan
  *       403:
  *         description: Not a member of this group
  */
-router.post('/:groupId/invite', groupAccessMiddleware, validateRequest(inviteUserSchema), groupController.inviteUser);
+router.post('/:groupId/invite', groupAccessMiddleware, inviteLimiter, validateRequest(inviteUserSchema), groupController.inviteUser);
 
 /**
  * @swagger

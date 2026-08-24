@@ -52,3 +52,35 @@ export const loginUser = async ({ email, password }: LoginInput) => {
     refreshToken,
   };
 };
+
+export const refreshUserToken = async (refreshToken: string) => {
+  if (!refreshToken) {
+    throw new Error('Refresh token is required');
+  }
+
+  let payload: any;
+  try {
+    const { verifyRefreshToken } = await import('../utils/jwt');
+    payload = verifyRefreshToken(refreshToken);
+  } catch (err) {
+    throw new Error('Invalid or expired refresh token. Please login again.');
+  }
+
+  const user = await prisma.user.findUnique({
+    where: { id: payload.userId },
+    select: { id: true, name: true, email: true }
+  });
+
+  if (!user) {
+    throw new Error('User not found');
+  }
+
+  const newAccessToken = generateAccessToken(user.id);
+  const newRefreshToken = generateRefreshToken(user.id);
+
+  return {
+    user,
+    accessToken: newAccessToken,
+    refreshToken: newRefreshToken,
+  };
+};
