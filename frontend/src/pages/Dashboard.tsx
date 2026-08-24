@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { getDashboardStats } from '../api/users';
 import type { DashboardStats } from '../api/users';
 import BalancesBreakdownModal from '../components/dashboard/BalancesBreakdownModal';
+import GlobalAddExpenseModal from '../components/expenses/GlobalAddExpenseModal';
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -12,18 +13,20 @@ const Dashboard = () => {
   const [stats, setStats] = useState<DashboardStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [breakdownModalState, setBreakdownModalState] = useState<{ isOpen: boolean, type: 'OWES' | 'OWED' }>({ isOpen: false, type: 'OWES' });
+  const [isAddExpenseOpen, setIsAddExpenseOpen] = useState(false);
+
+  const fetchStats = async () => {
+    try {
+      const data = await getDashboardStats();
+      setStats(data);
+    } catch (err) {
+      console.error('Failed to load dashboard stats', err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const fetchStats = async () => {
-      try {
-        const data = await getDashboardStats();
-        setStats(data);
-      } catch (err) {
-        console.error('Failed to load dashboard stats', err);
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchStats();
   }, []);
 
@@ -157,10 +160,10 @@ const Dashboard = () => {
       <section className="mb-10">
         <div className="flex items-center gap-6">
           {[
-            { icon: DollarSign, label: 'Pay', color: 'text-blue-600', bg: 'bg-blue-50', onClick: () => navigate('/groups') },
-            { icon: UserPlus, label: 'Request', color: 'text-violet-600', bg: 'bg-violet-50', onClick: () => navigate('/groups') },
-            { icon: ArrowUpRight, label: 'Split', color: 'text-amber-600', bg: 'bg-amber-50', onClick: () => navigate('/groups') },
-            { icon: Wallet, label: 'Balance', color: 'text-emerald-600', bg: 'bg-emerald-50', onClick: () => navigate('/activity') },
+            { icon: DollarSign, label: 'Pay', color: 'text-blue-600', bg: 'bg-blue-50', onClick: () => setBreakdownModalState({ isOpen: true, type: 'OWES' }) },
+            { icon: UserPlus, label: 'Request', color: 'text-violet-600', bg: 'bg-violet-50', onClick: () => setBreakdownModalState({ isOpen: true, type: 'OWED' }) },
+            { icon: ArrowUpRight, label: 'Split', color: 'text-amber-600', bg: 'bg-amber-50', onClick: () => setIsAddExpenseOpen(true) },
+            { icon: Wallet, label: 'Balance', color: 'text-emerald-600', bg: 'bg-emerald-50', onClick: () => setBreakdownModalState({ isOpen: true, type: (stats?.totalBalance || 0) >= 0 ? 'OWED' : 'OWES' }) },
           ].map((action) => (
             <button
               key={action.label}
@@ -175,6 +178,13 @@ const Dashboard = () => {
           ))}
         </div>
       </section>
+
+      <GlobalAddExpenseModal
+        isOpen={isAddExpenseOpen}
+        onClose={() => setIsAddExpenseOpen(false)}
+        currentUser={user}
+        onExpenseAdded={fetchStats}
+      />
 
       {/* ─── Activity Feed ─── */}
       <section>

@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { createSettlement } from '../../api/settlements';
-import { X, CreditCard, ArrowUpRight, Upload, Image as ImageIcon, CheckCircle2, Loader, Info } from 'lucide-react';
+import { X, CreditCard, ArrowUpRight, Upload, Image as ImageIcon, CheckCircle2, Loader, Info, Copy } from 'lucide-react';
+import toast from 'react-hot-toast';
 import type { Group, User } from '../../types';
 
 interface SettleUpModalProps {
@@ -184,6 +185,35 @@ export default function SettleUpModal({
                   </div>
                 </div>
 
+                {/* Recipient's Payment Details (if available) */}
+                {(() => {
+                  const selectedMember = otherMembers.find(m => m.user.id.toString() === payeeId);
+                  const pm = selectedMember?.user && (selectedMember.user as any).paymentMethod;
+                  if (!pm) return null;
+                  return (
+                    <div className="bg-blue-50/70 border border-blue-100 rounded-2xl p-3.5 flex items-center justify-between">
+                      <div className="min-w-0 pr-2">
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-blue-700">
+                          {selectedMember?.user?.name}'s Receiving Account
+                        </span>
+                        <p className="text-xs font-mono font-bold text-slate-800 mt-0.5 truncate">
+                          {pm}
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          navigator.clipboard.writeText(pm);
+                          toast.success('Account details copied');
+                        }}
+                        className="flex items-center gap-1 bg-white border border-blue-200 text-blue-700 px-2.5 py-1.5 rounded-xl text-xs font-bold shadow-2xs hover:bg-blue-50 transition-all active:scale-95 flex-shrink-0"
+                      >
+                        <Copy size={12} /> Copy
+                      </button>
+                    </div>
+                  );
+                })()}
+
                 {/* Amount Input */}
                 <div>
                   <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">
@@ -195,15 +225,77 @@ export default function SettleUpModal({
                     </span>
                     <input 
                       type="number" 
-                      step="0.01"
+                      step="1"
                       min="1"
                       value={amount} 
                       onChange={e => setAmount(e.target.value)} 
-                      placeholder="0.00"
+                      placeholder="0"
                       className="w-full bg-slate-50 border border-slate-200 text-slate-900 rounded-xl pl-12 pr-4 py-3 text-sm font-mono font-bold focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all placeholder:text-slate-400"
                       required
                     />
                   </div>
+
+                  {/* Round-Up Quick Buttons */}
+                  {payeeId && parseFloat(amount) > 0 && (() => {
+                    const exact = parseFloat(amount);
+                    const roundTo10 = Math.ceil(exact / 10) * 10;
+                    const roundTo50 = Math.ceil(exact / 50) * 50;
+                    const roundTo100 = Math.ceil(exact / 100) * 100;
+                    // Only show round-up options if exact amount has decimals or isn't already round
+                    const options = [roundTo10, roundTo50, roundTo100].filter(
+                      (val, idx, arr) => val > exact && arr.indexOf(val) === idx
+                    );
+                    if (options.length === 0) return null;
+                    return (
+                      <div className="flex items-center gap-2 mt-2">
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Round up:</span>
+                        {options.map(val => (
+                          <button
+                            key={val}
+                            type="button"
+                            onClick={() => setAmount(val.toString())}
+                            className={`text-[11px] font-bold px-2.5 py-1 rounded-lg border transition-all ${
+                              parseFloat(amount) === val
+                                ? 'bg-blue-600 text-white border-blue-600'
+                                : 'bg-white text-slate-600 border-slate-200 hover:border-blue-300 hover:bg-blue-50/50'
+                            }`}
+                          >
+                            Rs. {val}
+                          </button>
+                        ))}
+                      </div>
+                    );
+                  })()}
+
+                  {/* Overpayment / Underpayment Notice */}
+                  {payeeId && parseFloat(amount) > 0 && (() => {
+                    const selectedDebt = oweList.find((b: any) => b.to?.toString() === payeeId);
+                    if (!selectedDebt) return null;
+                    const owedRupees = selectedDebt.amount / 100;
+                    const enteredAmount = parseFloat(amount);
+                    const diff = enteredAmount - owedRupees;
+                    if (Math.abs(diff) < 0.01) return null;
+                    if (diff > 0) {
+                      return (
+                        <div className="bg-blue-50/70 border border-blue-100 rounded-xl p-3 mt-2">
+                          <p className="text-[11px] font-semibold text-blue-700 leading-relaxed">
+                            You are paying Rs. {diff.toFixed(2)} more than the owed amount. 
+                            The extra amount will be automatically credited to your balance — {
+                              group.members?.find(m => m.user.id.toString() === payeeId)?.user?.name || 'they'
+                            } will owe you Rs. {diff.toFixed(2)} back.
+                          </p>
+                        </div>
+                      );
+                    } else {
+                      return (
+                        <div className="bg-amber-50/70 border border-amber-100 rounded-xl p-3 mt-2">
+                          <p className="text-[11px] font-semibold text-amber-700 leading-relaxed">
+                            Partial payment. You will still owe Rs. {Math.abs(diff).toFixed(2)} after this settlement.
+                          </p>
+                        </div>
+                      );
+                    }
+                  })()}
                 </div>
 
                 {/* Receipt Screenshot Upload */}

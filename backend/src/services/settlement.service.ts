@@ -5,6 +5,23 @@ import { CreateSettlementInput } from '../validators/settlement.schema';
 export const createSettlement = async (payerId: number, data: CreateSettlementInput, filePath?: string) => {
   const amountPaisa = rupeeToPaisa(data.amount);
 
+  // Prevent duplicate: block if there is already an AWAITING_VERIFICATION settlement
+  // for the same payer → payee pair in the same group
+  const existingPending = await prisma.settlement.findFirst({
+    where: {
+      groupId: data.groupId,
+      payerId,
+      payeeId: data.payeeId,
+      status: 'AWAITING_VERIFICATION',
+    },
+  });
+
+  if (existingPending) {
+    throw new Error(
+      `You already have a pending settlement of Rs. ${(existingPending.amount / 100).toFixed(2)} awaiting verification from this person. Please wait for them to confirm or reject it before submitting another payment.`
+    );
+  }
+
   return prisma.settlement.create({
     data: {
       groupId: data.groupId,
@@ -12,7 +29,7 @@ export const createSettlement = async (payerId: number, data: CreateSettlementIn
       payeeId: data.payeeId,
       amount: amountPaisa,
       screenshotUrl: filePath,
-      status: 'AWAITING_VERIFICATION', // Payment is now pending payee confirmation
+      status: 'AWAITING_VERIFICATION',
     }
   });
 };

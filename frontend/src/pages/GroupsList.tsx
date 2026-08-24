@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Plus, Hash, Users, ChevronRight, Loader } from 'lucide-react';
+import { Plus, Hash, Users, Loader, Calendar, ArrowUpRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getUserGroups, createGroup, joinGroup } from '../api/groups';
 import { getDashboardStats } from '../api/users';
@@ -9,6 +9,7 @@ import type { Group } from '../types';
 export default function GroupsList() {
   const [groups, setGroups] = useState<Group[]>([]);
   const [totalOwed, setTotalOwed] = useState(0);
+  const [totalOwes, setTotalOwes] = useState(0);
   const [loading, setLoading] = useState(true);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isJoinModalOpen, setIsJoinModalOpen] = useState(false);
@@ -29,6 +30,7 @@ export default function GroupsList() {
       setGroups(groupsData);
       if (statsData) {
         setTotalOwed(statsData.totalOwed || 0);
+        setTotalOwes(statsData.totalOwes || 0);
       }
     } catch (err: any) {
       console.error(err);
@@ -74,6 +76,23 @@ export default function GroupsList() {
     }
   };
 
+  // Color palette for group avatars
+  const avatarColors = [
+    'from-blue-500 to-sky-400',
+    'from-violet-500 to-purple-400',
+    'from-emerald-500 to-teal-400',
+    'from-amber-500 to-orange-400',
+    'from-rose-500 to-pink-400',
+    'from-indigo-500 to-blue-400',
+  ];
+
+  const getGroupColor = (index: number) => avatarColors[index % avatarColors.length];
+
+  const formatDate = (dateStr: string) => {
+    const date = new Date(dateStr);
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+  };
+
   if (loading) {
     return (
       <div className="flex justify-center items-center min-h-[400px]">
@@ -84,48 +103,58 @@ export default function GroupsList() {
 
   return (
     <div className="animate-fade-in w-full font-['Plus_Jakarta_Sans',_sans-serif]">
-      {/* ─── Header Section ─── */}
-      <section className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
+      {/* Header Section */}
+      <section className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
         <div>
           <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">
-            Groups
+            Your Groups
           </h1>
           <p className="text-sm text-slate-500 mt-1">
-            You are in {groups.length} {groups.length === 1 ? 'group' : 'groups'}.
+            Manage shared expenses across {groups.length} {groups.length === 1 ? 'group' : 'groups'}
           </p>
         </div>
         <div className="flex items-center gap-3">
           <button 
-            className="flex items-center gap-2 px-4 py-2 rounded-full border border-slate-200 text-slate-700 text-sm font-semibold hover:bg-slate-50 transition-colors"
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-slate-200 text-slate-700 text-xs font-bold hover:bg-slate-50 transition-all active:scale-95"
             onClick={() => setIsJoinModalOpen(true)}
           >
-            <Hash size={16} /> Join Group
+            <Hash size={15} /> Join Group
           </button>
           <button 
-            className="flex items-center gap-2 px-4 py-2 rounded-full bg-blue-600 hover:bg-blue-700 text-white shadow-sm text-sm font-semibold transition-all hover:shadow-md active:scale-95"
+            className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white shadow-sm text-xs font-bold transition-all hover:shadow-md active:scale-95"
             onClick={() => setIsCreateModalOpen(true)}
           >
-            <Plus size={16} /> New Group
+            <Plus size={15} /> New Group
           </button>
         </div>
       </section>
 
-      {/* ─── Top Balance Hero Card ─── */}
-      <section className="mb-6">
-        <div className="bg-white rounded-2xl p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-[0_8px_30px_rgb(15,23,42,0.04)] border border-slate-100">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-1">Total Owed To You</p>
-            <h2 className="text-3xl font-extrabold text-slate-900 tracking-tight">
-              Rs. {(totalOwed / 100).toFixed(2)}
-            </h2>
-          </div>
-          <button className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-xl font-semibold shadow-sm transition-all hover:shadow-md active:scale-95">
-            Settle Up
-          </button>
+      {/* Financial Summary Row */}
+      <section className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+        <div className="bg-white rounded-3xl p-5 border border-slate-100 shadow-[0_8px_30px_rgb(15,23,42,0.04)]">
+          <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-2">Active Groups</p>
+          <h3 className="text-2xl font-extrabold text-slate-900">
+            {groups.length}
+          </h3>
+          <p className="text-xs text-slate-400 mt-1">Expense sharing circles</p>
+        </div>
+        <div className="bg-white rounded-3xl p-5 border border-slate-100 shadow-[0_8px_30px_rgb(15,23,42,0.04)]">
+          <p className="text-[11px] font-bold uppercase tracking-wider text-emerald-500 mb-2">You Are Owed</p>
+          <h3 className="text-2xl font-extrabold text-slate-900 font-mono">
+            Rs. {(totalOwed / 100).toFixed(2)}
+          </h3>
+          <p className="text-xs text-slate-400 mt-1">Net receivables across groups</p>
+        </div>
+        <div className="bg-white rounded-3xl p-5 border border-slate-100 shadow-[0_8px_30px_rgb(15,23,42,0.04)]">
+          <p className="text-[11px] font-bold uppercase tracking-wider text-rose-500 mb-2">You Owe</p>
+          <h3 className="text-2xl font-extrabold text-slate-900 font-mono">
+            Rs. {(totalOwes / 100).toFixed(2)}
+          </h3>
+          <p className="text-xs text-slate-400 mt-1">Net payables across groups</p>
         </div>
       </section>
 
-      {/* ─── Dynamic Groups List ─── */}
+      {/* Groups Grid */}
       {groups.length === 0 ? (
         <div className="bg-white rounded-3xl border border-slate-100 shadow-[0_8px_30px_rgb(15,23,42,0.04)] p-12 flex flex-col items-center justify-center text-center">
           <div className="w-16 h-16 rounded-full bg-slate-50 border border-slate-100 flex items-center justify-center mb-4 text-slate-300">
@@ -133,70 +162,99 @@ export default function GroupsList() {
           </div>
           <h2 className="text-lg font-bold text-slate-900 mb-1">No Groups Yet</h2>
           <p className="text-sm text-slate-500 mb-6 max-w-sm">
-            Create a new group or join an existing one to start splitting expenses with friends.
+            Create a new group or join an existing one using an invite code to start splitting expenses.
           </p>
-          <button 
-            onClick={() => setIsCreateModalOpen(true)}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-full font-semibold shadow-sm transition-all active:scale-95 text-sm"
-          >
-            Create your first group
-          </button>
+          <div className="flex items-center gap-3">
+            <button 
+              onClick={() => setIsJoinModalOpen(true)}
+              className="border border-slate-200 text-slate-700 px-5 py-2.5 rounded-xl font-bold text-xs transition-all active:scale-95 hover:bg-slate-50"
+            >
+              Join with Code
+            </button>
+            <button 
+              onClick={() => setIsCreateModalOpen(true)}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-5 py-2.5 rounded-xl font-bold shadow-sm transition-all active:scale-95 text-xs"
+            >
+              Create Your First Group
+            </button>
+          </div>
         </div>
       ) : (
-        <div className="bg-white rounded-3xl border border-slate-100 shadow-[0_8px_30px_rgb(15,23,42,0.04)] overflow-hidden">
-          <div className="flex flex-col divide-y divide-slate-100">
-            {groups.map((group) => (
-              <motion.div 
-                key={group.id} 
-                className="flex items-center gap-4 p-4 hover:bg-slate-50 transition-colors cursor-pointer group"
-                onClick={() => navigate(`/groups/${group.id}`)}
-              >
-                <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center flex-shrink-0 text-slate-500 font-bold text-sm">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {groups.map((group, index) => (
+            <motion.div 
+              key={group.id}
+              className="bg-white rounded-3xl border border-slate-100 shadow-[0_8px_30px_rgb(15,23,42,0.04)] p-5 cursor-pointer hover:shadow-lg hover:border-blue-100 transition-all group"
+              onClick={() => navigate(`/groups/${group.id}`)}
+              whileHover={{ y: -2 }}
+              whileTap={{ scale: 0.98 }}
+            >
+              {/* Group Header */}
+              <div className="flex items-start gap-3.5 mb-4">
+                <div className={`w-12 h-12 rounded-2xl bg-gradient-to-br ${getGroupColor(index)} flex items-center justify-center flex-shrink-0 text-white font-bold text-sm shadow-sm`}>
                   {group.name.substring(0, 2).toUpperCase()}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h3 className="text-base font-bold text-slate-900 truncate">{group.name}</h3>
-                  <p className="text-xs text-slate-500 mt-0.5 truncate">
-                    Created on {new Date(group.createdAt).toLocaleDateString()}
-                  </p>
+                  <h3 className="text-base font-bold text-slate-900 truncate leading-tight">{group.name}</h3>
+                  <div className="flex items-center gap-1.5 mt-1 text-slate-400">
+                    <Calendar size={12} />
+                    <span className="text-[11px] font-medium">{formatDate(group.createdAt)}</span>
+                  </div>
                 </div>
-                <div className="text-slate-300 group-hover:text-blue-600 transition-colors transform group-hover:translate-x-1">
-                  <ChevronRight size={20} />
+                <div className="text-slate-300 group-hover:text-blue-600 transition-colors mt-0.5">
+                  <ArrowUpRight size={18} />
                 </div>
-              </motion.div>
-            ))}
-          </div>
+              </div>
+
+              {/* Group Meta */}
+              <div className="flex items-center justify-between pt-3 border-t border-slate-100">
+                <div className="flex items-center gap-1.5">
+                  <Users size={13} className="text-slate-400" />
+                  <span className="text-[11px] font-bold text-slate-500">
+                    {(group as any).members?.length || '--'} members
+                  </span>
+                </div>
+                <span className="text-[11px] font-bold text-blue-600 bg-blue-50 px-2.5 py-1 rounded-lg">
+                  View Details
+                </span>
+              </div>
+            </motion.div>
+          ))}
         </div>
       )}
 
-      {/* ─── Modals ─── */}
+      {/* Modals */}
       <AnimatePresence>
         {isCreateModalOpen && (
           <motion.div 
-            className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+            className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center z-50 p-4"
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            onClick={() => setIsCreateModalOpen(false)}
           >
             <motion.div 
               className="bg-white rounded-3xl p-6 w-full max-w-md shadow-2xl border border-slate-100"
               initial={{ y: 20, scale: 0.95 }} animate={{ y: 0, scale: 1 }} exit={{ y: 20, scale: 0.95 }}
+              onClick={e => e.stopPropagation()}
             >
-              <h2 className="text-xl font-bold text-slate-900 mb-4">Create New Group</h2>
-              {error && <div className="bg-rose-50 text-rose-600 text-sm p-3 rounded-xl mb-4 border border-rose-100">{error}</div>}
+              <h2 className="text-xl font-bold text-slate-900 mb-1">Create New Group</h2>
+              <p className="text-xs text-slate-400 mb-5">Start a new expense-sharing circle with friends, roommates, or colleagues.</p>
+              {error && <div className="bg-rose-50 text-rose-600 text-xs font-semibold p-3 rounded-xl mb-4 border border-rose-100">{error}</div>}
               <form onSubmit={handleCreateGroup}>
                 <div className="mb-5">
-                  <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2 ml-1">Group Name</label>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Group Name</label>
                   <input 
                     type="text" 
                     value={newGroupName} 
                     onChange={e => setNewGroupName(e.target.value)} 
-                    placeholder="E.g. Goa Trip 2026"
+                    placeholder="e.g. Flat 204 Roommates"
                     required
-                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent transition-all"
+                    maxLength={50}
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 font-semibold placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
                   />
                 </div>
                 <div className="flex justify-end gap-2">
-                  <button type="button" className="px-4 py-2 text-sm font-semibold text-slate-500 hover:text-slate-700 transition-colors" onClick={() => setIsCreateModalOpen(false)}>Cancel</button>
-                  <button type="submit" className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-semibold shadow-sm transition-all active:scale-95 disabled:opacity-70" disabled={actionLoading}>
+                  <button type="button" className="px-4 py-2.5 text-xs font-bold text-slate-500 hover:text-slate-700 transition-colors rounded-xl hover:bg-slate-50" onClick={() => setIsCreateModalOpen(false)}>Cancel</button>
+                  <button type="submit" className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-sm transition-all active:scale-95 disabled:opacity-70" disabled={actionLoading}>
                     {actionLoading ? 'Creating...' : 'Create Group'}
                   </button>
                 </div>
@@ -207,30 +265,34 @@ export default function GroupsList() {
 
         {isJoinModalOpen && (
           <motion.div 
-            className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+            className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center z-50 p-4"
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            onClick={() => setIsJoinModalOpen(false)}
           >
             <motion.div 
               className="bg-white rounded-3xl p-6 w-full max-w-md shadow-2xl border border-slate-100"
               initial={{ y: 20, scale: 0.95 }} animate={{ y: 0, scale: 1 }} exit={{ y: 20, scale: 0.95 }}
+              onClick={e => e.stopPropagation()}
             >
-              <h2 className="text-xl font-bold text-slate-900 mb-4">Join Group</h2>
-              {error && <div className="bg-rose-50 text-rose-600 text-sm p-3 rounded-xl mb-4 border border-rose-100">{error}</div>}
+              <h2 className="text-xl font-bold text-slate-900 mb-1">Join a Group</h2>
+              <p className="text-xs text-slate-400 mb-5">Enter the invite code shared by the group admin to join their expense circle.</p>
+              {error && <div className="bg-rose-50 text-rose-600 text-xs font-semibold p-3 rounded-xl mb-4 border border-rose-100">{error}</div>}
               <form onSubmit={handleJoinGroup}>
                 <div className="mb-5">
-                  <label className="block text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2 ml-1">Invite Code</label>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">Invite Code</label>
                   <input 
                     type="text" 
                     value={inviteCode} 
                     onChange={e => setInviteCode(e.target.value.toUpperCase())} 
-                    placeholder="E.g. ROOM88"
+                    placeholder="e.g. OSF3399C"
                     required
-                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-600 focus:border-transparent transition-all"
+                    maxLength={10}
+                    className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 font-mono font-bold placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all tracking-widest text-center"
                   />
                 </div>
                 <div className="flex justify-end gap-2">
-                  <button type="button" className="px-4 py-2 text-sm font-semibold text-slate-500 hover:text-slate-700 transition-colors" onClick={() => setIsJoinModalOpen(false)}>Cancel</button>
-                  <button type="submit" className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-sm font-semibold shadow-sm transition-all active:scale-95 disabled:opacity-70" disabled={actionLoading}>
+                  <button type="button" className="px-4 py-2.5 text-xs font-bold text-slate-500 hover:text-slate-700 transition-colors rounded-xl hover:bg-slate-50" onClick={() => setIsJoinModalOpen(false)}>Cancel</button>
+                  <button type="submit" className="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold shadow-sm transition-all active:scale-95 disabled:opacity-70" disabled={actionLoading}>
                     {actionLoading ? 'Joining...' : 'Join Group'}
                   </button>
                 </div>

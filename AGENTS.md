@@ -12,7 +12,7 @@ SplitEase is a full-stack, multi-tenant expense splitting and financial manageme
 - **Framework**: Express.js 5.x.
 - **ORM & Database**: Prisma ORM with PostgreSQL database connection pooling and relational ACID transactions.
 - **Authentication**: JWT (JSON Web Tokens) with `bcryptjs` password hashing (salt factor 10).
-- **Validation**: Zod schema validators with custom request interception middleware.
+- **Validation**: Zod schema validators (`auth.schema.ts`, `user.schema.ts`, `group.schema.ts`, `expense.schema.ts`, `settlement.schema.ts`) with custom request interception middleware.
 - **Documentation**: OpenAPI 3.0 (Swagger UI) mounted on `/api-docs`.
 - **Background Jobs**: `node-cron` scheduled tasks (daily 9:00 AM 7-day debt reminders).
 - **Email Delivery**: Nodemailer with automated zero-config Ethereal test inbox, Resend API key auto-detection (`RESEND_API_KEY`), and resilient ISP port 587 fallback logger.
@@ -20,10 +20,10 @@ SplitEase is a full-stack, multi-tenant expense splitting and financial manageme
 
 ### Frontend
 - **Framework & Build Tool**: React 18, Vite, TypeScript.
-- **Styling**: TailwindCSS & custom modern CSS design tokens (`Plus Jakarta Sans` typography, mesh gradients, glassmorphism, responsive cards).
+- **Styling**: TailwindCSS & custom modern CSS design tokens (`Plus Jakarta Sans` typography, mesh gradients, glassmorphism, responsive cards, mobile bottom navigation).
 - **Icons & Animations**: Lucide React, Framer Motion.
 - **Networking**: Axios instance with automatic JWT Bearer token injection and error interceptors.
-- **Notifications**: `react-hot-toast` for real-time feedback.
+- **Notifications**: `react-hot-toast` for real-time feedback and interactive notification dropdown popovers.
 
 ---
 
@@ -79,6 +79,10 @@ expense-splitting-platform/
     ├── src/
     │   ├── api/                # Type-safe Axios client & endpoints
     │   ├── components/         # Reusable UI components (expenses, settlements, dashboard, layout)
+    │   │   ├── dashboard/      # BalancesBreakdownModal
+    │   │   ├── expenses/       # AddExpenseModal, ExpenseDetailModal, ExpenseList, GlobalAddExpenseModal
+    │   │   ├── layout/         # AppLayout, NotificationsPopover, ProtectedRoute
+    │   │   └── settlements/    # SettleUpModal
     │   ├── context/            # AuthContext (user session, login, register, updateUser, logout)
     │   ├── pages/              # Dashboard, GroupsList, GroupDetails, Activity, Settings, Login
     │   ├── types/              # TypeScript interface definitions
@@ -100,16 +104,30 @@ expense-splitting-platform/
    - Supports single payer or multiple payers splitting expenses unequally or equally among participants.
    - Deletion is restricted to the expense creator or primary payer and cascades across dependent relations.
    - Immutable audit trail (`ExpenseEditHistory`) logs changes (`oldValue` vs `newValue` snapshots).
-3. **Settlements & Verification**:
-   - Debtors submit settlements with optional payment receipts (`multer` image uploads).
+   - Instant global expense creation from header and dashboard with group selection.
+3. **Structured Payment Details & Settlement Flow**:
+   - Users configure structured payment receiving accounts in Settings (**EasyPaisa**, **JazzCash**, **Raast ID**, **Nayapay**, **Sadapay**, or **Bank IBAN**).
+   - In `SettleUpModal`, selecting a recipient automatically displays their verified account with a 1-click **Copy Account** button.
    - Status defaults to `AWAITING_VERIFICATION` and only updates group balances upon explicit payee confirmation.
-4. **Automated 7-Day Settlement Reminders & UI Nudges**:
+   - **Duplicate Settlement Prevention**: Backend blocks creating a new settlement if the same payer already has an `AWAITING_VERIFICATION` settlement with the same payee in the same group, preventing accidental double payments and inflated balances.
+4. **Interactive Notification Center**:
+   - Floating `NotificationsPopover` on top-right bell icon with live unread badge counter.
+   - Shows pending settlement verification requests with direct access to group activity.
+5. **Automated 7-Day Settlement Reminders & UI Nudges**:
    - Daily cron job scans for unsettled expenses older than 7 days and dispatches email notifications.
    - Strict 7-day cooldown per debtor/creditor pair tracked via `SettlementReminderLog` table to prevent spamming.
-   - Interactive `🔔 Remind` buttons on the Group Balances tab and Dashboard "You Are Owed" breakdown modal allow 1-click manual email nudges.
-5. **Group Invitations & Member Search**:
-   - Unique 6-character group invite codes (e.g. `OSF3399C`) with 1-click copy.
-   - Admin search modal for existing registered users with real-time invitation.
+   - Interactive `Remind` buttons on the Group Balances tab and Dashboard "You Are Owed" breakdown modal allow 1-click manual email nudges.
+6. **Financial Intelligence & Analytics Feed**:
+   - Activity page tracks complete user financial history: Total Settled Amount, Shared Expense Volume, and Active Groups.
+   - Real-time search and filter chips for `All`, `Expenses`, and `Settlements`.
+   - Text overflow protection with `truncate` and `overflow-hidden` on all user-generated content.
+7. **Mobile-First Responsive Layout**:
+   - Floating mobile bottom navigation bar on screens `< 768px` for Dashboard, Groups, Quick Add, Activity, and Settings.
+   - Fluid card grids and responsive paddings across mobile, tablet, and desktop.
+8. **Groups Page (Card Grid Layout)**:
+   - Financial summary row (Active Groups count, You Are Owed, You Owe).
+   - Responsive card grid with gradient-colored group avatars, creation dates, and member counts.
+   - Clean modals for Create Group and Join Group with input validation.
 
 ---
 
@@ -152,4 +170,4 @@ RESEND_API_KEY="re_xxxxxxx"
 - **Database Transactions**: Any mutation involving multiple tables (e.g. expense creation, expense editing, member removal) must use `prisma.$transaction`.
 - **Text Wrapping & Overflow**: Ensure all user-generated strings (names, descriptions, emails) use `break-words`, `break-all`, or `truncate` to prevent layout overflow.
 - **Module Resolution**: Backend uses ES Modules (`import`/`export`) with `moduleResolution: bundler`. Avoid CommonJS `require()`.
-- **Preserve Documentation**: Keep comments, docstrings, and this `AGENTS.md` file updated whenever adding new features or modifying architectural workflows.
+- **Strict Documentation Sync**: Keep comments, docstrings, and this `AGENTS.md` file updated whenever adding new features or modifying architectural workflows.
