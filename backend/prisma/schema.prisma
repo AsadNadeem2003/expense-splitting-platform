@@ -42,6 +42,8 @@ model Group {
   expenses        Expense[]
   settlements     Settlement[]
   reminderLogs    SettlementReminderLog[]
+
+  @@index([createdById])
 }
 
 model GroupMember {
@@ -55,14 +57,14 @@ model GroupMember {
   user  User  @relation(fields: [userId], references: [id])
 
   @@unique([groupId, userId])
+  @@index([userId])
+  @@index([groupId])
 }
 
 enum Role {
   ADMIN
   MEMBER
 }
-
-
 
 model PendingJoinRequest {
   id        Int        @id @default(autoincrement())
@@ -75,6 +77,8 @@ model PendingJoinRequest {
   user  User  @relation(fields: [userId], references: [id])
 
   @@unique([groupId, userId])
+  @@index([groupId, status])
+  @@index([userId])
 }
 
 enum JoinStatus {
@@ -99,6 +103,10 @@ model Expense {
   participants ExpenseParticipant[]
   payers       ExpensePayer[]
   editHistory  ExpenseEditHistory[]
+
+  @@index([groupId])
+  @@index([paidById])
+  @@index([createdAt])
 }
 
 // Supports multi-payer bills
@@ -112,6 +120,8 @@ model ExpensePayer {
   user    User    @relation(fields: [userId], references: [id])
 
   @@unique([expenseId, userId])
+  @@index([expenseId])
+  @@index([userId])
 }
 
 model ExpenseParticipant {
@@ -124,6 +134,8 @@ model ExpenseParticipant {
   user    User    @relation(fields: [userId], references: [id])
 
   @@unique([expenseId, userId])
+  @@index([expenseId])
+  @@index([userId])
 }
 
 model ExpenseEditHistory {
@@ -137,6 +149,9 @@ model ExpenseEditHistory {
 
   expense  Expense @relation(fields: [expenseId], references: [id])
   editedBy User    @relation("EditedBy", fields: [editedById], references: [id])
+
+  @@index([expenseId])
+  @@index([editedById])
 }
 
 model Settlement {
@@ -153,6 +168,12 @@ model Settlement {
   group  Group @relation(fields: [groupId], references: [id])
   payer  User  @relation("SettlementPayer", fields: [payerId], references: [id])
   payee  User  @relation("SettlementPayee", fields: [payeeId], references: [id])
+
+  @@index([groupId])
+  @@index([payerId])
+  @@index([payeeId])
+  @@index([status])
+  @@index([createdAt])
 }
 
 enum SettlementStatus {
@@ -172,5 +193,8 @@ model SettlementReminderLog {
   group    Group @relation(fields: [groupId], references: [id], onDelete: Cascade)
   debtor   User  @relation("ReminderDebtor", fields: [debtorId], references: [id], onDelete: Cascade)
   creditor User  @relation("ReminderCreditor", fields: [creditorId], references: [id], onDelete: Cascade)
+
+  @@index([groupId, debtorId, creditorId])
+  @@index([sentAt])
 }
 
