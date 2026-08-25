@@ -78,11 +78,11 @@ const Login = () => {
         transition={{ duration: 0.3, ease: 'easeOut' }}
       >
         <div className="flex flex-col items-center mb-8">
-          <div className="w-14 h-14 bg-blue-600 rounded-2xl flex items-center justify-center text-white font-bold text-2xl mb-6 shadow-[0_4px_20px_rgba(37,99,235,0.15)]">
+          <div className="w-14 h-14 bg-gradient-to-tr from-blue-600 via-indigo-600 to-violet-500 rounded-2xl flex items-center justify-center text-white font-black text-2xl mb-6 shadow-xl shadow-blue-500/25 ring-4 ring-blue-50">
             SE
           </div>
-          <h1 className="text-3xl font-bold tracking-tight text-slate-900 mb-2">
-            {isLogin ? 'Welcome back' : 'Create an account'}
+          <h1 className="text-3xl font-black tracking-tight text-slate-900 mb-2">
+            Split<span className="text-blue-600">Ease</span>
           </h1>
           <p className="text-sm text-slate-500 text-center">
             {isLogin ? 'Enter your details to access your account.' : 'Join SplitEase to start splitting expenses.'}

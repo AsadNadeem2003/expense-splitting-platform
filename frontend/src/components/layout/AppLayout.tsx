@@ -43,12 +43,19 @@ const AppLayout = () => {
       />
 
       {/* Desktop Sidebar (hidden on mobile) */}
-      <aside className="hidden md:flex fixed left-0 top-0 h-full w-[272px] bg-slate-50 border-r border-slate-200 flex-col pt-8 pb-4 z-50">
-        <div className="px-6 mb-10">
-          <h1 className="text-2xl font-extrabold text-slate-900 tracking-tight">
-            SplitEase
-          </h1>
-          <p className="text-[11px] text-slate-400 font-semibold tracking-widest mt-1 uppercase">Expense Splitting</p>
+      <aside className="hidden md:flex fixed left-0 top-0 h-full w-[272px] bg-slate-50 border-r border-slate-200 flex-col pt-7 pb-4 z-50">
+        <div className="px-6 mb-8 flex items-center gap-3.5">
+          <div className="w-11 h-11 rounded-2xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-violet-500 flex items-center justify-center text-white font-black text-lg shadow-md shadow-blue-500/20 ring-4 ring-blue-50/80 flex-shrink-0">
+            SE
+          </div>
+          <div className="min-w-0">
+            <h1 className="text-xl font-black text-slate-900 tracking-tight leading-none">
+              Split<span className="text-blue-600">Ease</span>
+            </h1>
+            <span className="text-[9px] font-black uppercase tracking-wider text-blue-700 bg-blue-50 border border-blue-200/60 px-1.5 py-0.5 rounded-md mt-1.5 inline-block leading-tight">
+              Expense Splitting
+            </span>
+          </div>
         </div>
 
         <nav className="flex-1 px-4 space-y-1">
@@ -92,7 +99,7 @@ const AppLayout = () => {
         <header className="fixed top-0 right-0 w-full md:w-[calc(100%-272px)] h-[72px] bg-white/80 backdrop-blur-md border-b border-slate-200/60 z-40">
           <div className="h-full max-w-5xl mx-auto px-4 sm:px-8 flex justify-between items-center">
             <div className="flex items-center gap-3 min-w-0">
-              <div className="md:hidden w-8 h-8 rounded-xl bg-blue-600 text-white font-bold text-xs flex items-center justify-center shadow-xs">
+              <div className="md:hidden w-9 h-9 rounded-xl bg-gradient-to-tr from-blue-600 via-indigo-600 to-violet-500 text-white font-black text-xs flex items-center justify-center shadow-md shadow-blue-500/20 ring-2 ring-blue-50 flex-shrink-0">
                 SE
               </div>
               <h2 className="text-base sm:text-lg font-bold text-slate-900 tracking-tight truncate">
