@@ -126,12 +126,12 @@ expense-splitting-platform/
    - In `SettleUpModal`, selecting a recipient automatically displays their verified account with a 1-click **Copy Account** button.
    - Status defaults to `AWAITING_VERIFICATION` and only updates group balances upon explicit payee confirmation.
    - **Duplicate Settlement Prevention**: Backend blocks creating a new settlement if the same payer already has an `AWAITING_VERIFICATION` settlement with the same payee in the same group, preventing accidental double payments and inflated balances.
-6. **Interactive Notification Center (In-App Reminders, Join Requests & Verifications)**:
-   - Floating `NotificationsPopover` on top-right bell icon with live unread badge counter (`remindersReceived` + `pendingVerifications` + `pendingJoinRequests`) and 15s live polling.
-   - Displays real-time **Group Join Requests** for group admins (e.g. *"Hassan Khan wants to join Kuch Bhi"*) with direct 1-click **Review & Approve →** action.
-   - Displays incoming debtor nudges (e.g. *"Ahsan reminded you to settle your Rs. 1,454.55 debt in Kuch Bhi"*) with direct 1-click **Settle Up** action.
-   - Displays incoming settlement verification requests with proof screenshot review links.
-   - **Instant User Invites**: The "Invite Member" modal auto-loads all registered platform users on open with 1-click **Add** button.
+6. **Interactive Notification Center & Member Discovery (Approach 2 Architecture)**:
+   - **Real-Time Group Join Request Alerts**: Group admins receive real-time join request notifications with live 15s polling and 1-click instant **Approve (✓)** / **Reject (✕)** buttons directly inside `NotificationsPopover`.
+   - **Direct Members Tab Deep-Linking**: Clicking "Review & Approve →" switches active tab to `?tab=members` with a glowing pending request queue and badge counter.
+   - **1-Click WhatsApp Sharing & Direct Links**: Groups support 1-click WhatsApp message sharing (`https://wa.me/?text=...`) and direct invite links (`/login?inviteCode=...`) with seamless auto-join for logged-in and new users.
+   - **Privacy-Compliant Targeted Search**: Group invite search requires $\ge 2$ characters to protect platform privacy (preventing open directory browsing by strangers) while allowing instant 1-click adding when a friend's name/email is known.
+   - **Duplicate Active Membership Guard**: Prevents redundant join requests if the user is already an active member of the group.
 7. **Automated 7-Day Settlement Reminders & UI Nudges**:
    - Daily cron job scans for unsettled expenses older than 7 days and dispatches email notifications.
    - Strict 7-day cooldown per debtor/creditor pair tracked via `SettlementReminderLog` table to prevent spamming.

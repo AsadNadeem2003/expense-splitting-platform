@@ -30,6 +30,13 @@ export const joinGroup = async (userId: number, inviteCode: string) => {
   const group = await prisma.group.findUnique({ where: { inviteCode } });
   if (!group) throw new Error('Invalid invite code');
 
+  const existingMembership = await prisma.groupMember.findUnique({
+    where: { groupId_userId: { groupId: group.id, userId } }
+  });
+  if (existingMembership) {
+    throw new Error('You are already an active member of this group');
+  }
+
   const existingRequest = await prisma.pendingJoinRequest.findUnique({
     where: { groupId_userId: { groupId: group.id, userId } }
   });

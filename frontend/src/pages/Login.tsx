@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { LogIn, UserPlus, Mail, Lock, User } from 'lucide-react';
+import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
 import { joinGroup } from '../api/groups';
 import './Login.css';
@@ -17,12 +18,30 @@ const Login = () => {
   const [searchParams] = useSearchParams();
   const { login, register, isAuthenticated } = useAuth();
 
-  // If already authenticated, redirect to home
+  // If already authenticated and opened invite link, auto-submit join request
   useEffect(() => {
     if (isAuthenticated) {
-      navigate('/');
+      const inviteCode = searchParams.get('inviteCode');
+      if (inviteCode) {
+        joinGroup(inviteCode)
+          .then(() => {
+            toast.success('Join request submitted! Waiting for admin approval.');
+            navigate('/groups');
+          })
+          .catch((err) => {
+            const msg = err.response?.data?.message || err.message;
+            if (msg?.includes('already')) {
+              toast('You are already a member or have a pending request.', { icon: 'ℹ️' });
+            } else {
+              toast.error(msg || 'Failed to join group');
+            }
+            navigate('/groups');
+          });
+      } else {
+        navigate('/');
+      }
     }
-  }, [isAuthenticated, navigate]);
+  }, [isAuthenticated, navigate, searchParams]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -38,9 +57,9 @@ const Login = () => {
       if (inviteCode) {
         try {
           await joinGroup(inviteCode);
-        } catch (joinErr) {
+          toast.success('Join request submitted! Waiting for admin approval.');
+        } catch (joinErr: any) {
           console.error("Failed to auto-join group:", joinErr);
-          // Proceed to dashboard anyway
         }
       }
       

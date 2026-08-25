@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus, Hash, Users, Loader, Calendar, ArrowUpRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import toast from 'react-hot-toast';
 import { getUserGroups, createGroup, joinGroup } from '../api/groups';
 import { getDashboardStats } from '../api/users';
 import type { Group } from '../types';
@@ -49,6 +50,7 @@ export default function GroupsList() {
     setError('');
     try {
       const newGroup = await createGroup(newGroupName);
+      toast.success('Group created successfully!');
       setGroups([...groups, newGroup]);
       setIsCreateModalOpen(false);
       setNewGroupName('');
@@ -66,6 +68,7 @@ export default function GroupsList() {
     setError('');
     try {
       await joinGroup(inviteCode);
+      toast.success('Join request sent! The admin has been alerted to approve.');
       setIsJoinModalOpen(false);
       setInviteCode('');
       fetchData();
