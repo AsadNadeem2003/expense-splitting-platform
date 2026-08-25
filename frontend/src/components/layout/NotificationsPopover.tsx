@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Bell, X, CreditCard, Receipt, ArrowRight, Loader, AlertCircle, Clock, UserPlus } from 'lucide-react';
+import { Bell, X, CreditCard, Receipt, ArrowRight, Loader, AlertCircle, Clock, UserPlus, Check } from 'lucide-react';
+import toast from 'react-hot-toast';
 import { getDashboardStats } from '../../api/users';
+import { approveJoinRequest, rejectJoinRequest } from '../../api/groups';
 import { useAuth } from '../../context/AuthContext';
 
 interface NotificationsPopoverProps {
@@ -72,6 +74,28 @@ export const NotificationsPopover: React.FC<NotificationsPopoverProps> = ({ onNo
 
   const totalUnread = reminders.length + pendingVerifications.length + pendingJoinRequests.length;
 
+  const handleApproveJoin = async (e: React.MouseEvent, groupId: number, requestId: number, userName: string) => {
+    e.stopPropagation();
+    try {
+      await approveJoinRequest(groupId, requestId);
+      toast.success(`Approved ${userName} to join the group!`);
+      fetchNotifications();
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Failed to approve request');
+    }
+  };
+
+  const handleRejectJoin = async (e: React.MouseEvent, groupId: number, requestId: number) => {
+    e.stopPropagation();
+    try {
+      await rejectJoinRequest(groupId, requestId);
+      toast.success('Join request rejected');
+      fetchNotifications();
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Failed to reject request');
+    }
+  };
+
   const formatRelative = (dateStr: string) => {
     const date = new Date(dateStr);
     const now = new Date();
@@ -140,9 +164,9 @@ export const NotificationsPopover: React.FC<NotificationsPopoverProps> = ({ onNo
                         key={req.id}
                         onClick={() => {
                           setIsOpen(false);
-                          navigate(`/groups/${req.groupId}`);
+                          navigate(`/groups/${req.groupId}?tab=members`);
                         }}
-                        className="bg-white border border-violet-200/80 rounded-2xl p-3.5 shadow-2xs hover:border-violet-300 transition-all cursor-pointer"
+                        className="bg-white border border-violet-200/80 rounded-2xl p-3.5 shadow-2xs hover:border-violet-300 transition-all cursor-pointer group"
                       >
                         <div className="flex items-start justify-between gap-2">
                           <div className="flex items-center gap-2.5 min-w-0">
@@ -158,13 +182,26 @@ export const NotificationsPopover: React.FC<NotificationsPopoverProps> = ({ onNo
                               </p>
                             </div>
                           </div>
-                          <span className="text-[10px] uppercase font-bold text-violet-700 bg-violet-50 px-2 py-1 rounded-lg flex-shrink-0">
-                            Action Needed
-                          </span>
+                          <div className="flex items-center gap-1.5 flex-shrink-0">
+                            <button
+                              onClick={(e) => handleApproveJoin(e, req.groupId, req.id, req.user?.name)}
+                              title="Approve immediately"
+                              className="w-7 h-7 rounded-lg bg-emerald-500 hover:bg-emerald-600 text-white flex items-center justify-center transition-all shadow-xs active:scale-95 cursor-pointer"
+                            >
+                              <Check size={14} />
+                            </button>
+                            <button
+                              onClick={(e) => handleRejectJoin(e, req.groupId, req.id)}
+                              title="Reject request"
+                              className="w-7 h-7 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 flex items-center justify-center transition-all active:scale-95 cursor-pointer"
+                            >
+                              <X size={14} />
+                            </button>
+                          </div>
                         </div>
                         <div className="mt-2 pt-2 border-t border-slate-100 flex items-center justify-between">
                           <span className="text-[10px] font-semibold text-slate-400">Invite Code Request</span>
-                          <span className="text-[11px] font-bold text-violet-600 hover:underline">Review & Approve →</span>
+                          <span className="text-[11px] font-bold text-violet-600 group-hover:underline">Review & Approve →</span>
                         </div>
                       </div>
                     ))}

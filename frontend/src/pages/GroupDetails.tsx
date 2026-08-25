@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, Loader, Users, Receipt, CreditCard, Copy, Check, Bell, UserPlus, X, Mail, Trash2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getGroupDetails, getGroupBalances, approveJoinRequest, rejectJoinRequest, inviteUser, removeMember, leaveGroup, deleteGroup } from '../api/groups';
@@ -18,13 +18,17 @@ import './GroupDetails.css';
 export default function GroupDetails() {
   const { groupId } = useParams();
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { user } = useAuth();
   
   const [group, setGroup] = useState<Group | null>(null);
   const [balances, setBalances] = useState<any>(null);
   const [settlements, setSettlements] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'expenses' | 'balances' | 'members'>('expenses');
+  
+  const tabParam = searchParams.get('tab') as 'expenses' | 'balances' | 'members';
+  const initialTab = tabParam && ['expenses', 'balances', 'members'].includes(tabParam) ? tabParam : 'expenses';
+  const [activeTab, setActiveTab] = useState<'expenses' | 'balances' | 'members'>(initialTab);
   const [copied, setCopied] = useState(false);
   
   // Modals State
@@ -68,6 +72,18 @@ export default function GroupDetails() {
     if (groupId) fetchDetails();
   }, [groupId]);
 
+  useEffect(() => {
+    const tabFromUrl = searchParams.get('tab') as 'expenses' | 'balances' | 'members';
+    if (tabFromUrl && ['expenses', 'balances', 'members'].includes(tabFromUrl) && tabFromUrl !== activeTab) {
+      setActiveTab(tabFromUrl);
+    }
+  }, [searchParams]);
+
+  const handleTabChange = (tab: 'expenses' | 'balances' | 'members') => {
+    setActiveTab(tab);
+    setSearchParams({ tab });
+  };
+
   const copyInviteCode = () => {
     if (group?.inviteCode) {
       navigator.clipboard.writeText(group.inviteCode);
@@ -93,18 +109,20 @@ export default function GroupDetails() {
   const handleApproveRequest = async (requestId: number) => {
     try {
       await approveJoinRequest(Number(groupId), requestId);
+      toast.success('Approved member to join group!');
       fetchDetails();
-    } catch (err) {
-      console.error('Failed to approve request', err);
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Failed to approve request');
     }
   };
 
   const handleRejectRequest = async (requestId: number) => {
     try {
       await rejectJoinRequest(Number(groupId), requestId);
+      toast.success('Join request rejected');
       fetchDetails();
-    } catch (err) {
-      console.error('Failed to reject request', err);
+    } catch (err: any) {
+      toast.error(err.response?.data?.message || 'Failed to reject request');
     }
   };
 
@@ -166,6 +184,12 @@ export default function GroupDetails() {
   useEffect(() => {
     if (!isInviteModalOpen) return;
 
+    if (!searchQuery.trim() || searchQuery.trim().length < 2) {
+      setSearchResults([]);
+      setSearching(false);
+      return;
+    }
+
     setSearching(true);
     const delayDebounceFn = setTimeout(async () => {
       try {
@@ -179,7 +203,7 @@ export default function GroupDetails() {
       } finally {
         setSearching(false);
       }
-    }, searchQuery.trim() ? 300 : 0);
+    }, 300);
 
     return () => clearTimeout(delayDebounceFn);
   }, [searchQuery, isInviteModalOpen, group]);
@@ -338,21 +362,26 @@ export default function GroupDetails() {
         <div className="tabs">
           <button 
             className={`tab ${activeTab === 'expenses' ? 'active' : ''}`}
-            onClick={() => setActiveTab('expenses')}
+            onClick={() => handleTabChange('expenses')}
           >
             <Receipt size={18} /> Expenses
           </button>
           <button 
             className={`tab ${activeTab === 'balances' ? 'active' : ''}`}
-            onClick={() => setActiveTab('balances')}
+            onClick={() => handleTabChange('balances')}
           >
             <CreditCard size={18} /> Balances
           </button>
           <button 
             className={`tab ${activeTab === 'members' ? 'active' : ''}`}
-            onClick={() => setActiveTab('members')}
+            onClick={() => handleTabChange('members')}
           >
             <Users size={18} /> Members
+            {group.members?.find(m => m.user.id === user?.id)?.role === 'ADMIN' && group.pendingRequests && group.pendingRequests.length > 0 && (
+              <span className="ml-1.5 px-2 py-0.5 text-xs bg-amber-500 text-white rounded-full font-bold animate-pulse shadow-xs">
+                {group.pendingRequests.length}
+              </span>
+            )}
           </button>
         </div>
       </div>
@@ -457,13 +486,21 @@ export default function GroupDetails() {
             >
               {/* Admin Pending Requests */}
               {group.members?.find(m => m.user.id === user?.id)?.role === 'ADMIN' && group.pendingRequests && group.pendingRequests.length > 0 && (
-                <div className="bg-white rounded-3xl p-6 border border-slate-100 shadow-sm">
-                  <h3 className="text-lg font-bold text-slate-900 mb-4">Pending Requests</h3>
+                <div className="bg-amber-50/70 rounded-3xl p-6 border-2 border-amber-300 shadow-md">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-8 h-8 rounded-xl bg-amber-500 text-white flex items-center justify-center font-bold text-xs shadow-xs">
+                      {group.pendingRequests.length}
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-bold text-slate-900">Pending Join Requests</h3>
+                      <p className="text-xs text-amber-700 font-medium">Review and approve members who entered this group's invite code</p>
+                    </div>
+                  </div>
                   <div className="flex flex-col gap-3">
                     {group.pendingRequests.map((req) => (
-                      <div key={req.id} className="flex items-center justify-between p-4 rounded-2xl bg-amber-50 border border-amber-100">
+                      <div key={req.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-2xl bg-white border border-amber-200 shadow-xs gap-3 sm:gap-0">
                         <div className="flex items-center gap-4">
-                          <div className="w-10 h-10 rounded-full bg-white text-amber-600 font-bold flex items-center justify-center border border-amber-200 shadow-sm">
+                          <div className="w-10 h-10 rounded-full bg-amber-100 text-amber-700 font-bold flex items-center justify-center border border-amber-300 shadow-xs flex-shrink-0">
                             {req.user.name.charAt(0).toUpperCase()}
                           </div>
                           <div>
@@ -471,12 +508,18 @@ export default function GroupDetails() {
                             <p className="text-xs text-slate-500">{req.user.email}</p>
                           </div>
                         </div>
-                        <div className="flex gap-2">
-                          <button onClick={() => handleApproveRequest(req.id)} className="w-8 h-8 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center hover:bg-emerald-200 transition-colors">
-                            <Check size={16} />
+                        <div className="flex items-center gap-2 self-end sm:self-auto">
+                          <button 
+                            onClick={() => handleApproveRequest(req.id)} 
+                            className="flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-xl text-xs font-bold shadow-xs transition-all active:scale-95 cursor-pointer"
+                          >
+                            <Check size={14} /> Approve
                           </button>
-                          <button onClick={() => handleRejectRequest(req.id)} className="w-8 h-8 rounded-full bg-rose-100 text-rose-600 flex items-center justify-center hover:bg-rose-200 transition-colors">
-                            ✕
+                          <button 
+                            onClick={() => handleRejectRequest(req.id)} 
+                            className="flex items-center gap-1.5 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 px-3.5 py-2 rounded-xl text-xs font-bold transition-all active:scale-95 cursor-pointer"
+                          >
+                            <X size={14} /> Reject
                           </button>
                         </div>
                       </div>
@@ -684,11 +727,11 @@ export default function GroupDetails() {
                   )}
                 </div>
 
-                {/* Search Results / Registered Users */}
+                {/* Search Results */}
                 {searchResults.length > 0 ? (
                   <div className="mt-3">
                     <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1.5 block">
-                      {searchQuery.trim() ? 'Search Results' : 'Registered Users on SplitEase (1-Click Add)'}
+                      Search Results ({searchResults.length})
                     </span>
                     <div className="bg-white rounded-2xl border border-slate-100 shadow-md divide-y divide-slate-100 max-h-52 overflow-y-auto">
                       {searchResults.map(u => (
@@ -714,8 +757,10 @@ export default function GroupDetails() {
                   </div>
                 ) : (
                   !searching && (
-                    <p className="text-xs text-slate-400 mt-2 italic">
-                      {searchQuery.trim() ? 'No matching users found.' : 'No other registered users found to invite.'}
+                    <p className="text-xs text-slate-400 mt-2">
+                      {searchQuery.trim().length >= 2 
+                        ? 'No users found matching your search.' 
+                        : 'Type your friend\'s name or email to search and add them directly, or share the invite code below.'}
                     </p>
                   )
                 )}
