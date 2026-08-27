@@ -1,8 +1,10 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { useEffect } from 'react';
+import { BrowserRouter, Routes, Route, useNavigate, useLocation } from 'react-router-dom';
 import AppLayout from './components/layout/AppLayout';
 import ProtectedRoute from './components/layout/ProtectedRoute';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
+import Docs from './pages/Docs';
 import { AuthProvider } from './context/AuthContext';
 
 import GroupsList from './pages/GroupsList';
@@ -12,13 +14,30 @@ import Settings from './pages/Settings';
 
 import { Toaster } from 'react-hot-toast';
 
+// Watcher to support accessing docs via ?docs parameter
+function DocsParamRedirect() {
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    const searchParams = new URLSearchParams(location.search);
+    if (searchParams.has('docs') && location.pathname !== '/docs') {
+      navigate('/docs');
+    }
+  }, [location, navigate]);
+
+  return null;
+}
+
 function App() {
   return (
     <AuthProvider>
       <Toaster position="bottom-right" toastOptions={{ style: { background: '#fff', color: '#0f172a', border: '1px solid #e2e8f0', borderRadius: '16px', boxShadow: '0 8px 30px rgb(15,23,42,0.06)' } }} />
       <BrowserRouter>
+        <DocsParamRedirect />
         <Routes>
           <Route path="/login" element={<Login />} />
+          <Route path="/docs" element={<Docs />} />
           
           <Route element={<ProtectedRoute />}>
             <Route path="/" element={<AppLayout />}>

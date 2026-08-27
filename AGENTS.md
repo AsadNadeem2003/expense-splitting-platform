@@ -144,9 +144,13 @@ expense-splitting-platform/
    - Floating mobile bottom navigation bar on screens `< 768px` for Dashboard, Groups, Quick Add, Activity, and Settings.
    - Fluid card grids and responsive paddings across mobile, tablet, and desktop.
 10. **Groups Page (Card Grid Layout)**:
-   - Financial summary row (Active Groups count, You Are Owed, You Owe).
-   - Responsive card grid with gradient-colored group avatars, creation dates, and member counts.
-   - Clean modals for Create Group and Join Group with input validation.
+    - Financial summary row (Active Groups count, You Are Owed, You Owe).
+    - Responsive card grid with gradient-colored group avatars, creation dates, and member counts.
+    - Clean modals for Create Group and Join Group with input validation.
+11. **Enterprise Client Documentation Portal (`/docs` & `?docs`)**:
+    - Interactive 8-section technical portal covering Architecture, Debt Simplification Engine, Zero Floating-Point Paisa Math, Database ERDs, Sequence Diagrams, Security Hardening, REST API Reference with 1-click Copy cURL, and AWS EC2 / CI/CD DevOps blueprints.
+    - Embedded **Live Debt Simplification Playground** for real-time mathematical graph testing.
+    - Publicly accessible without authentication and deep-linked in the sidebar, header, and login footer.
 
 ---
 
