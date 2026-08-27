@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom';
-import { LayoutDashboard, Users, CreditCard, Settings, LogOut, Plus, HelpCircle } from 'lucide-react';
+import { LayoutDashboard, Users, CreditCard, Settings, LogOut, Plus, HelpCircle, BookOpen } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import NotificationsPopover from './NotificationsPopover';
 import GlobalAddExpenseModal from '../expenses/GlobalAddExpenseModal';
@@ -75,6 +75,10 @@ const AppLayout = () => {
             <Settings size={20} />
             <span>Settings</span>
           </NavLink>
+          <NavLink to="/docs" className={navClass}>
+            <BookOpen size={20} />
+            <span>Documentation</span>
+          </NavLink>
         </nav>
 
         <div className="px-4 mt-auto">
@@ -107,6 +111,15 @@ const AppLayout = () => {
               </h2>
             </div>
             <div className="flex items-center gap-2.5 sm:gap-4">
+              {/* Documentation Portal Link */}
+              <button
+                onClick={() => navigate('/docs')}
+                className="text-slate-400 hover:text-blue-600 transition-colors p-2 rounded-xl hover:bg-slate-100 relative cursor-pointer"
+                title="Client Documentation Portal"
+              >
+                <BookOpen size={20} />
+              </button>
+
               {/* Algorithm Explainer Help Button */}
               <button
                 onClick={() => setIsAlgorithmModalOpen(true)}

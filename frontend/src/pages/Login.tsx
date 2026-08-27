@@ -165,12 +165,12 @@ const Login = () => {
           </button>
         </form>
 
-        <div className="mt-8 text-center">
+        <div className="mt-8 text-center space-y-4">
           <p className="text-sm text-slate-500">
             {isLogin ? "New to SplitEase? " : "Already have an account? "}
             <button 
               type="button"
-              className="text-blue-600 font-semibold hover:text-blue-700 transition-colors"
+              className="text-blue-600 font-semibold hover:text-blue-700 transition-colors cursor-pointer"
               onClick={() => {
                 setIsLogin(!isLogin);
                 setError('');
@@ -179,6 +179,17 @@ const Login = () => {
               {isLogin ? 'Create a free account' : 'Sign in to your account'}
             </button>
           </p>
+
+          <div className="pt-4 border-t border-slate-100 flex items-center justify-center">
+            <button
+              type="button"
+              onClick={() => navigate('/docs')}
+              className="text-xs font-bold text-slate-500 hover:text-blue-600 transition-colors flex items-center gap-1.5 cursor-pointer"
+            >
+              <span>Explore Client Documentation Portal</span>
+              <span className="font-mono text-blue-500">&rarr;</span>
+            </button>
+          </div>
         </div>
       </motion.div>
     </div>
