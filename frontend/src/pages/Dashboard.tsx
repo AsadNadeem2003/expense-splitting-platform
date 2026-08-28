@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { DollarSign, UserPlus, ArrowUpRight, Wallet, Loader, MoveUpRight, MoveDownLeft } from 'lucide-react';
+import { Receipt, CreditCard, Bell, Users, Loader, MoveUpRight, MoveDownLeft, Wallet } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { getDashboardStats } from '../api/users';
@@ -172,14 +172,14 @@ const Dashboard = () => {
         </button>
       </section>
 
-      {/* ─── Quick Actions Row ─── */}
+      {/* ─── Quick Actions Row (4 Distinct Core Workflows) ─── */}
       <section className="mb-10">
         <div className="flex items-center justify-between sm:justify-start gap-3 sm:gap-6">
           {[
-            { icon: DollarSign, label: 'Pay', color: 'text-blue-600', bg: 'bg-blue-50', onClick: () => setBreakdownModalState({ isOpen: true, type: 'OWES' }) },
-            { icon: UserPlus, label: 'Request', color: 'text-violet-600', bg: 'bg-violet-50', onClick: () => setBreakdownModalState({ isOpen: true, type: 'OWED' }) },
-            { icon: ArrowUpRight, label: 'Split', color: 'text-amber-600', bg: 'bg-amber-50', onClick: () => setIsAddExpenseOpen(true) },
-            { icon: Wallet, label: 'Balance', color: 'text-emerald-600', bg: 'bg-emerald-50', onClick: () => setBreakdownModalState({ isOpen: true, type: (stats?.totalBalance || 0) >= 0 ? 'OWED' : 'OWES' }) },
+            { icon: Receipt, label: 'Split Bill', color: 'text-blue-600', bg: 'bg-blue-50', onClick: () => setIsAddExpenseOpen(true) },
+            { icon: CreditCard, label: 'Settle Up', color: 'text-rose-600', bg: 'bg-rose-50', onClick: () => setBreakdownModalState({ isOpen: true, type: 'OWES' }) },
+            { icon: Bell, label: 'Remind', color: 'text-amber-600', bg: 'bg-amber-50', onClick: () => setBreakdownModalState({ isOpen: true, type: 'OWED' }) },
+            { icon: Users, label: 'Groups', color: 'text-violet-600', bg: 'bg-violet-50', onClick: () => navigate('/groups') },
           ].map((action) => (
             <button
               key={action.label}

@@ -86,23 +86,23 @@ const BalancesBreakdownModal: React.FC<BalancesBreakdownModalProps> = ({ isOpen,
                   </div>
                   <div className="divide-y divide-slate-100">
                     {group.items.map((item, idx) => (
-                      <div key={idx} className="p-5 flex items-center justify-between hover:bg-slate-50 transition-colors">
-                        <div className="flex items-center gap-4 min-w-0 pr-2">
+                      <div key={idx} className="p-4 sm:p-5 flex items-center justify-between gap-3 hover:bg-slate-50 transition-colors">
+                        <div className="flex items-center gap-3.5 min-w-0 flex-1">
                           <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${type === 'OWES' ? 'bg-rose-50 text-rose-500' : 'bg-emerald-50 text-emerald-500'}`}>
                             {type === 'OWES' ? <ArrowUpRight size={20} /> : <ArrowDownRight size={20} />}
                           </div>
                           <div className="min-w-0 flex-1">
-                            <p className="text-sm font-bold text-slate-900 break-words">
+                            <p className="text-sm font-bold text-slate-900 break-words leading-snug">
                               {type === 'OWES' ? (
-                                <>You owe <span className="break-all">{item.otherUserName}</span></>
+                                <>You owe <span className="text-slate-900 font-extrabold">{item.otherUserName}</span></>
                               ) : (
-                                <><span className="break-all">{item.otherUserName}</span> owes you</>
+                                <><span className="text-slate-900 font-extrabold">{item.otherUserName}</span> owes you</>
                               )}
                             </p>
                           </div>
                         </div>
-                        <div className="text-right flex flex-col items-end gap-1">
-                          <p className={`font-bold font-mono ${type === 'OWES' ? 'text-rose-600' : 'text-emerald-600'}`}>
+                        <div className="text-right flex flex-col items-end gap-1 flex-shrink-0">
+                          <p className={`font-bold font-mono text-sm sm:text-base ${type === 'OWES' ? 'text-rose-600' : 'text-emerald-600'}`}>
                             Rs. {(item.amount / 100).toFixed(2)}
                           </p>
                           {type === 'OWED' && (
@@ -132,11 +132,11 @@ const BalancesBreakdownModal: React.FC<BalancesBreakdownModalProps> = ({ isOpen,
                   <button 
                     onClick={() => {
                       onClose();
-                      navigate(`/groups/${group.items[0].groupId}`);
+                      navigate(`/groups/${group.items[0].groupId}?tab=balances`);
                     }}
-                    className="w-full py-3 text-sm font-semibold text-indigo-600 hover:text-indigo-700 bg-indigo-50/50 hover:bg-indigo-50 transition-colors border-t border-slate-100"
+                    className="w-full py-3 text-sm font-semibold text-blue-600 hover:text-blue-700 bg-blue-50/50 hover:bg-blue-50 transition-colors border-t border-slate-100 flex items-center justify-center gap-1.5 cursor-pointer"
                   >
-                    View Group
+                    View Group Balances →
                   </button>
                 </div>
               ))}

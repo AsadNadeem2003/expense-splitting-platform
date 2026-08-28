@@ -110,20 +110,20 @@ const AppLayout = () => {
                 Welcome, {user?.name?.split(' ')[0] || 'User'}
               </h2>
             </div>
-            <div className="flex items-center gap-2.5 sm:gap-4">
-              {/* Documentation Portal Link */}
+            <div className="flex items-center gap-2 sm:gap-4">
+              {/* Documentation Portal Link (Desktop only) */}
               <button
                 onClick={() => navigate('/docs')}
-                className="text-slate-400 hover:text-blue-600 transition-colors p-2 rounded-xl hover:bg-slate-100 relative cursor-pointer"
+                className="hidden md:flex text-slate-400 hover:text-blue-600 transition-colors p-2 rounded-xl hover:bg-slate-100 relative cursor-pointer"
                 title="Client Documentation Portal"
               >
                 <BookOpen size={20} />
               </button>
 
-              {/* Algorithm Explainer Help Button */}
+              {/* Algorithm Explainer Help Button (Desktop only) */}
               <button
                 onClick={() => setIsAlgorithmModalOpen(true)}
-                className="text-slate-400 hover:text-blue-600 transition-colors p-2 rounded-xl hover:bg-slate-100 relative cursor-pointer"
+                className="hidden md:flex text-slate-400 hover:text-blue-600 transition-colors p-2 rounded-xl hover:bg-slate-100 relative cursor-pointer"
                 title="How Debt Simplification Works"
               >
                 <HelpCircle size={20} />
@@ -140,21 +140,14 @@ const AppLayout = () => {
                   <Plus size={15} /> Add Expense
                 </button>
               )}
+
+              {/* User Avatar (Settings Navigation on Mobile & Desktop) */}
               <button 
                 onClick={() => navigate('/settings')}
-                className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-500 to-sky-400 flex items-center justify-center text-white font-bold text-sm shadow-sm hover:ring-2 hover:ring-blue-100 hover:scale-105 active:scale-95 transition-all cursor-pointer"
-                title="Account Settings"
+                className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-500 to-sky-400 flex items-center justify-center text-white font-bold text-sm shadow-sm hover:ring-2 hover:ring-blue-100 hover:scale-105 active:scale-95 transition-all cursor-pointer flex-shrink-0"
+                title="Account Settings & Profile"
               >
                 {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
-              </button>
-
-              {/* Mobile Quick Log Out Button */}
-              <button 
-                onClick={handleLogout}
-                className="md:hidden text-slate-400 hover:text-rose-500 p-2 rounded-xl hover:bg-rose-50 transition-colors cursor-pointer"
-                title="Log Out"
-              >
-                <LogOut size={19} />
               </button>
             </div>
           </div>
