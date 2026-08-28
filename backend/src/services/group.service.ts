@@ -197,6 +197,34 @@ export const getUserGroups = async (userId: number) => {
 };
 
 export const leaveGroup = async (userId: number, groupId: number) => {
+  const group = await prisma.group.findUnique({
+    where: { id: groupId },
+    include: { members: { orderBy: { joinedAt: 'asc' } } }
+  });
+
+  if (!group) throw new Error('Group not found');
+
+  const userMembership = group.members.find(m => m.userId === userId);
+  if (!userMembership) throw new Error('You are not a member of this group');
+
+  // If user is the only member in the group, delete the entire group
+  if (group.members.length === 1) {
+    return deleteGroup(userId, groupId);
+  }
+
+  // If user is an ADMIN and leaving, promote next longest-standing member to ADMIN
+  if (userMembership.role === 'ADMIN') {
+    const otherAdmins = group.members.filter(m => m.userId !== userId && m.role === 'ADMIN');
+    const otherMembers = group.members.filter(m => m.userId !== userId);
+    
+    if (otherAdmins.length === 0 && otherMembers.length > 0) {
+      await prisma.groupMember.update({
+        where: { id: otherMembers[0].id },
+        data: { role: 'ADMIN' }
+      });
+    }
+  }
+
   return prisma.groupMember.delete({
     where: { groupId_userId: { groupId, userId } }
   });

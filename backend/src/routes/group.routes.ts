@@ -283,6 +283,8 @@ router.delete('/:groupId/members/:userId', groupAccessMiddleware, groupControlle
  *       403:
  *         description: Not a member of this group
  */
+router.delete('/:groupId/leave', groupAccessMiddleware, groupController.leaveGroup);
+
 /**
  * @swagger
  * /api/groups/{groupId}:

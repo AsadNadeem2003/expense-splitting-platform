@@ -144,7 +144,7 @@ export default function GroupDetails() {
       toast.success('Left group successfully');
       navigate('/groups');
     } catch (err: any) {
-      toast.error(err.response?.data?.message || 'Failed to leave group');
+      toast.error(err.response?.data?.error || err.response?.data?.message || err.message || 'Failed to leave group');
     }
   };
 
