@@ -1,12 +1,14 @@
 import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { updateProfile } from '../api/users';
 import toast from 'react-hot-toast';
-import { Save, User as UserIcon, CreditCard, Globe } from 'lucide-react';
+import { Save, User as UserIcon, CreditCard, Globe, LogOut } from 'lucide-react';
 import './Settings.css';
 
 const Settings = () => {
-  const { user, updateUser } = useAuth();
+  const { user, updateUser, logout } = useAuth();
+  const navigate = useNavigate();
   
   const [formData, setFormData] = useState({
     name: '',
@@ -246,6 +248,28 @@ const Settings = () => {
             </button>
           </div>
         </form>
+      </div>
+
+      {/* Account Session & Log Out (Easy Access on Mobile and Desktop) */}
+      <div className="mt-6 bg-white rounded-3xl p-6 sm:p-8 border border-rose-100 shadow-[0_8px_30px_rgb(15,23,42,0.04)] flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div>
+          <h3 className="text-base font-bold text-slate-900 flex items-center gap-2">
+            <LogOut size={18} className="text-rose-500" /> Account Session
+          </h3>
+          <p className="text-xs text-slate-500 mt-0.5">
+            Logged in as <span className="font-semibold text-slate-700">{user?.email}</span>
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={() => {
+            logout();
+            navigate('/login');
+          }}
+          className="w-full sm:w-auto bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 rounded-full px-6 py-2.5 text-xs font-bold transition-all active:scale-95 flex items-center justify-center gap-2 cursor-pointer"
+        >
+          <LogOut size={16} /> Log Out of SplitEase
+        </button>
       </div>
     </div>
   );

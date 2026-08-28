@@ -59,6 +59,8 @@ export default function GroupDetails() {
   const [editExpenseData, setEditExpenseData] = useState<any>(null);
   const [expenseRefreshTrigger, setExpenseRefreshTrigger] = useState(0);
   const [sendingReminderId, setSendingReminderId] = useState<number | null>(null);
+  const [initialPayeeId, setInitialPayeeId] = useState<string>('');
+  const [initialAmount, setInitialAmount] = useState<string>('');
 
   // Invite Search State
   const [searchQuery, setSearchQuery] = useState('');
@@ -90,8 +92,17 @@ export default function GroupDetails() {
 
   useEffect(() => {
     const tabFromUrl = searchParams.get('tab') as 'expenses' | 'balances' | 'members';
-    if (tabFromUrl && ['expenses', 'balances', 'members'].includes(tabFromUrl) && tabFromUrl !== activeTab) {
+    if (tabFromUrl && ['expenses', 'balances', 'members'].includes(tabFromUrl)) {
       setActiveTab(tabFromUrl);
+    }
+    const settleParam = searchParams.get('settle');
+    const payeeIdParam = searchParams.get('payeeId');
+    const amountParam = searchParams.get('amount');
+    
+    if (payeeIdParam) setInitialPayeeId(payeeIdParam);
+    if (amountParam) setInitialAmount(amountParam);
+    if (settleParam === 'true') {
+      setIsSettleUpOpen(true);
     }
   }, [searchParams]);
 
@@ -467,7 +478,11 @@ export default function GroupDetails() {
                           <div className="balance-action">
                             <button 
                               className="btn-primary settle-btn-pro" 
-                              onClick={() => setIsSettleUpOpen(true)}
+                              onClick={() => {
+                                setInitialPayeeId(b.to.toString());
+                                setInitialAmount((b.amount / 100).toFixed(2));
+                                setIsSettleUpOpen(true);
+                              }}
                             >
                               Settle
                             </button>
@@ -667,11 +682,17 @@ export default function GroupDetails() {
 
       <SettleUpModal
         isOpen={isSettleUpOpen}
-        onClose={() => setIsSettleUpOpen(false)}
+        onClose={() => {
+          setIsSettleUpOpen(false);
+          setInitialPayeeId('');
+          setInitialAmount('');
+        }}
         group={group}
         currentUser={user}
         balances={balances}
         onSettlementAdded={handleExpenseOrSettlementAdded}
+        initialPayeeId={initialPayeeId}
+        initialAmount={initialAmount}
       />
 
       {/* Invite Member Modal */}

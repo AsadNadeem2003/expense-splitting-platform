@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { createSettlement } from '../../api/settlements';
 import { X, CreditCard, ArrowUpRight, Upload, Image as ImageIcon, CheckCircle2, Loader, Info, Copy } from 'lucide-react';
@@ -12,6 +12,8 @@ interface SettleUpModalProps {
   currentUser: User;
   onSettlementAdded: () => void;
   balances: any;
+  initialPayeeId?: string;
+  initialAmount?: string;
 }
 
 export default function SettleUpModal({ 
@@ -20,14 +22,23 @@ export default function SettleUpModal({
   group, 
   currentUser, 
   onSettlementAdded, 
-  balances 
+  balances,
+  initialPayeeId,
+  initialAmount
 }: SettleUpModalProps) {
-  const [payeeId, setPayeeId] = useState('');
-  const [amount, setAmount] = useState('');
+  const [payeeId, setPayeeId] = useState(initialPayeeId || '');
+  const [amount, setAmount] = useState(initialAmount || '');
   const [screenshot, setScreenshot] = useState<File | null>(null);
   
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  useEffect(() => {
+    if (isOpen) {
+      if (initialPayeeId) setPayeeId(initialPayeeId);
+      if (initialAmount) setAmount(initialAmount);
+    }
+  }, [isOpen, initialPayeeId, initialAmount]);
 
   // Find debts where current user is the debtor
   const oweList = balances?.simplified?.filter((b: any) => b.from?.toString() === currentUser.id.toString()) || [];

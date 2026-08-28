@@ -147,6 +147,15 @@ const AppLayout = () => {
               >
                 {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
               </button>
+
+              {/* Mobile Quick Log Out Button */}
+              <button 
+                onClick={handleLogout}
+                className="md:hidden text-slate-400 hover:text-rose-500 p-2 rounded-xl hover:bg-rose-50 transition-colors cursor-pointer"
+                title="Log Out"
+              >
+                <LogOut size={19} />
+              </button>
             </div>
           </div>
         </header>

@@ -219,7 +219,7 @@ export const NotificationsPopover: React.FC<NotificationsPopoverProps> = ({ onNo
                         key={rem.id}
                         onClick={() => {
                           setIsOpen(false);
-                          navigate(`/groups/${rem.groupId}`);
+                          navigate(`/groups/${rem.groupId}?tab=balances&settle=true&payeeId=${rem.creditorId}&amount=${(rem.amount / 100).toFixed(2)}`);
                         }}
                         className="bg-white border border-amber-200/80 rounded-2xl p-3.5 shadow-2xs hover:border-amber-300 transition-all cursor-pointer"
                       >
