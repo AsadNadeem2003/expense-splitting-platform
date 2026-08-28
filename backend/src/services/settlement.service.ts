@@ -22,7 +22,7 @@ export const createSettlement = async (payerId: number, data: CreateSettlementIn
     );
   }
 
-  return prisma.settlement.create({
+  const newSettlement = await prisma.settlement.create({
     data: {
       groupId: data.groupId,
       payerId,
@@ -32,6 +32,17 @@ export const createSettlement = async (payerId: number, data: CreateSettlementIn
       status: 'AWAITING_VERIFICATION',
     }
   });
+
+  // Clear obsolete reminder logs since debtor has taken action and submitted payment
+  await prisma.settlementReminderLog.deleteMany({
+    where: {
+      groupId: data.groupId,
+      debtorId: payerId,
+      creditorId: data.payeeId,
+    }
+  }).catch(() => {});
+
+  return newSettlement;
 };
 
 export const confirmSettlement = async (userId: number, settlementId: number) => {

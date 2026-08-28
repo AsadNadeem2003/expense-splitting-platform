@@ -119,16 +119,33 @@ export const getDashboardStats = async (userId: number) => {
   activities.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
   const recentActivity = activities.slice(0, 10);
 
-  // 5. Get reminders received by this user (where user is the debtor)
-  const remindersReceived = await prisma.settlementReminderLog.findMany({
+  // 5. Get active reminders received by this user (where user is the debtor and hasn't yet submitted payment)
+  const allReminders = await prisma.settlementReminderLog.findMany({
     where: { debtorId: userId },
     include: {
       group: { select: { id: true, name: true } },
       creditor: { select: { id: true, name: true } }
     },
     orderBy: { sentAt: 'desc' },
-    take: 10
+    take: 20
   });
+
+  // Fetch active pending or confirmed settlements submitted by this debtor
+  const existingSettlements = await prisma.settlement.findMany({
+    where: {
+      payerId: userId,
+      status: { in: ['AWAITING_VERIFICATION', 'CONFIRMED'] }
+    },
+    select: { groupId: true, payeeId: true }
+  });
+
+  // A reminder is only active if the debtor hasn't submitted a settlement to that creditor in that group
+  const remindersReceived = allReminders.filter(rem => {
+    const hasPaid = existingSettlements.some(
+      s => s.groupId === rem.groupId && s.payeeId === rem.creditorId
+    );
+    return !hasPaid;
+  }).slice(0, 10);
 
   // 6. Get pending settlements where user is the payee and needs to verify
   const pendingVerifications = await prisma.settlement.findMany({
