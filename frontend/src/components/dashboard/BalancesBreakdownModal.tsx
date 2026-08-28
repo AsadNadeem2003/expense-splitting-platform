@@ -41,7 +41,7 @@ const BalancesBreakdownModal: React.FC<BalancesBreakdownModalProps> = ({ isOpen,
   }, {} as Record<number, { groupName: string, items: BreakdownItem[] }>);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-sm" onClick={onClose}>
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-4 bg-slate-900/40 backdrop-blur-sm" onClick={onClose}>
       <div 
         className="bg-white rounded-3xl w-full max-w-md overflow-hidden shadow-2xl transform transition-all flex flex-col max-h-[85vh]"
         onClick={e => e.stopPropagation()}

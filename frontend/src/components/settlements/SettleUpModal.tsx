@@ -100,80 +100,80 @@ export default function SettleUpModal({
     <AnimatePresence>
       {isOpen && (
         <div 
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/40 backdrop-blur-xs font-['Plus_Jakarta_Sans',_sans-serif]"
+          className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-4 bg-slate-900/40 backdrop-blur-xs font-['Plus_Jakarta_Sans',_sans-serif]"
           onClick={handleClose}
         >
           <motion.div 
-            className="bg-white rounded-3xl w-full max-w-md overflow-hidden shadow-2xl border border-slate-100 flex flex-col max-h-[90vh]"
+            className="bg-white rounded-3xl w-full max-w-md overflow-hidden shadow-2xl border border-slate-100 flex flex-col max-h-[85vh] sm:max-h-[90vh]"
             initial={{ opacity: 0, scale: 0.95, y: 15 }} 
             animate={{ opacity: 1, scale: 1, y: 0 }} 
             exit={{ opacity: 0, scale: 0.95, y: 15 }}
             transition={{ duration: 0.2, ease: 'easeOut' }}
             onClick={e => e.stopPropagation()}
           >
-            {/* Header */}
-            <div className="px-6 py-5 border-b border-slate-100 flex items-center justify-between bg-white sticky top-0 z-10">
+            {/* Sticky Header */}
+            <div className="px-5 py-4 sm:px-6 sm:py-5 border-b border-slate-100 flex items-center justify-between bg-white flex-shrink-0 sticky top-0 z-10">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center font-bold shadow-xs">
+                <div className="w-10 h-10 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center font-bold shadow-xs flex-shrink-0">
                   <CreditCard size={20} />
                 </div>
-                <div>
-                  <h3 className="text-lg font-bold text-slate-900">Settle Up</h3>
-                  <p className="text-xs text-slate-400">Record a payment within {group.name}</p>
+                <div className="min-w-0 flex-1">
+                  <h3 className="text-lg font-bold text-slate-900 truncate">Settle Up</h3>
+                  <p className="text-xs text-slate-400 truncate">Record a payment within {group.name}</p>
                 </div>
               </div>
               <button 
                 onClick={handleClose}
-                className="p-2 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors"
+                className="p-2 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors flex-shrink-0 cursor-pointer"
               >
                 <X size={20} />
               </button>
             </div>
 
-            {/* Modal Body */}
-            <div className="p-6 overflow-y-auto space-y-5">
-              {error && (
-                <div className="text-rose-600 bg-rose-50 p-3.5 rounded-xl text-xs font-semibold border border-rose-100">
-                  {error}
-                </div>
-              )}
-
-              {/* Suggested Quick Payments */}
-              {oweList.length > 0 && (
-                <div className="bg-slate-50 border border-slate-200/80 rounded-2xl p-4">
-                  <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-600 mb-2.5">
-                    <ArrowUpRight size={14} className="text-blue-600" />
-                    Quick Settle (You Owe)
+            {/* Scrollable Form Body */}
+            <form id="settle-up-form" onSubmit={handleSubmit} className="flex flex-col flex-1 overflow-hidden min-h-0">
+              <div className="p-4 sm:p-6 overflow-y-auto space-y-4 sm:space-y-5 flex-1 bg-slate-50/50 min-h-0">
+                {error && (
+                  <div className="text-rose-600 bg-rose-50 p-3.5 rounded-xl text-xs font-semibold border border-rose-100">
+                    {error}
                   </div>
-                  <div className="space-y-2">
-                    {oweList.map((b: any, idx: number) => {
-                      const toUser = group.members?.find(m => m.user.id.toString() === b.to?.toString())?.user;
-                      const isSelected = payeeId === b.to?.toString();
-                      return (
-                        <button 
-                          key={idx}
-                          type="button" 
-                          className={`w-full flex items-center justify-between p-3 rounded-xl text-xs font-semibold transition-all border ${
-                            isSelected 
-                              ? 'bg-blue-600 text-white border-blue-600 shadow-sm' 
-                              : 'bg-white text-slate-700 border-slate-200 hover:border-blue-300 hover:bg-blue-50/40 shadow-2xs'
-                          }`}
-                          onClick={() => prefillOwed(b.amount, b.to)}
-                        >
-                          <span className="truncate pr-2">
-                            Pay <strong className="font-bold">{toUser?.name || `User ${b.to}`}</strong>
-                          </span>
-                          <span className={`font-mono font-bold ${isSelected ? 'text-white' : 'text-blue-600'}`}>
-                            Rs. {(b.amount / 100).toFixed(2)}
-                          </span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
+                )}
 
-              <form onSubmit={handleSubmit} className="space-y-4">
+                {/* Suggested Quick Payments */}
+                {oweList.length > 0 && (
+                  <div className="bg-white border border-slate-200/80 rounded-2xl p-4 shadow-2xs">
+                    <div className="flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-slate-600 mb-2.5">
+                      <ArrowUpRight size={14} className="text-blue-600" />
+                      Quick Settle (You Owe)
+                    </div>
+                    <div className="space-y-2">
+                      {oweList.map((b: any, idx: number) => {
+                        const toUser = group.members?.find(m => m.user.id.toString() === b.to?.toString())?.user;
+                        const isSelected = payeeId === b.to?.toString();
+                        return (
+                          <button 
+                            key={idx}
+                            type="button" 
+                            className={`w-full flex items-center justify-between p-3 rounded-xl text-xs font-semibold transition-all border cursor-pointer ${
+                              isSelected 
+                                ? 'bg-blue-600 text-white border-blue-600 shadow-sm' 
+                                : 'bg-slate-50 text-slate-700 border-slate-200 hover:border-blue-300 hover:bg-blue-50/40'
+                            }`}
+                            onClick={() => prefillOwed(b.amount, b.to)}
+                          >
+                            <span className="truncate pr-2">
+                              Pay <strong className="font-bold">{toUser?.name || `User ${b.to}`}</strong>
+                            </span>
+                            <span className={`font-mono font-bold flex-shrink-0 ${isSelected ? 'text-white' : 'text-blue-600'}`}>
+                              Rs. {(b.amount / 100).toFixed(2)}
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
                 {/* Payee Selection */}
                 <div>
                   <label className="block text-xs font-bold uppercase tracking-wider text-slate-500 mb-2">
@@ -183,7 +183,7 @@ export default function SettleUpModal({
                     <select 
                       value={payeeId} 
                       onChange={e => setPayeeId(e.target.value)} 
-                      className="w-full bg-slate-50 border border-slate-200 text-slate-900 rounded-xl px-4 py-3 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all cursor-pointer"
+                      className="w-full bg-white border border-slate-200 text-slate-900 rounded-xl px-4 py-3 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all cursor-pointer shadow-2xs"
                       required
                     >
                       <option value="" disabled>Select recipient</option>
@@ -217,7 +217,7 @@ export default function SettleUpModal({
                           navigator.clipboard.writeText(pm);
                           toast.success('Account details copied');
                         }}
-                        className="flex items-center gap-1 bg-white border border-blue-200 text-blue-700 px-2.5 py-1.5 rounded-xl text-xs font-bold shadow-2xs hover:bg-blue-50 transition-all active:scale-95 flex-shrink-0"
+                        className="flex items-center gap-1 bg-white border border-blue-200 text-blue-700 px-2.5 py-1.5 rounded-xl text-xs font-bold shadow-2xs hover:bg-blue-50 transition-all active:scale-95 flex-shrink-0 cursor-pointer"
                       >
                         <Copy size={12} /> Copy
                       </button>
@@ -241,7 +241,7 @@ export default function SettleUpModal({
                       value={amount} 
                       onChange={e => setAmount(e.target.value)} 
                       placeholder="0"
-                      className="w-full bg-slate-50 border border-slate-200 text-slate-900 rounded-xl pl-12 pr-4 py-3 text-sm font-mono font-bold focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all placeholder:text-slate-400"
+                      className="w-full bg-white border border-slate-200 text-slate-900 rounded-xl pl-12 pr-4 py-3 text-sm font-mono font-bold focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all placeholder:text-slate-400 shadow-2xs"
                       required
                     />
                   </div>
@@ -252,7 +252,6 @@ export default function SettleUpModal({
                     const roundTo10 = Math.ceil(exact / 10) * 10;
                     const roundTo50 = Math.ceil(exact / 50) * 50;
                     const roundTo100 = Math.ceil(exact / 100) * 100;
-                    // Only show round-up options if exact amount has decimals or isn't already round
                     const options = [roundTo10, roundTo50, roundTo100].filter(
                       (val, idx, arr) => val > exact && arr.indexOf(val) === idx
                     );
@@ -265,7 +264,7 @@ export default function SettleUpModal({
                             key={val}
                             type="button"
                             onClick={() => setAmount(val.toString())}
-                            className={`text-[11px] font-bold px-2.5 py-1 rounded-lg border transition-all ${
+                            className={`text-[11px] font-bold px-2.5 py-1 rounded-lg border transition-all cursor-pointer ${
                               parseFloat(amount) === val
                                 ? 'bg-blue-600 text-white border-blue-600'
                                 : 'bg-white text-slate-600 border-slate-200 hover:border-blue-300 hover:bg-blue-50/50'
@@ -316,7 +315,7 @@ export default function SettleUpModal({
                   </label>
                   
                   {screenshot ? (
-                    <div className="flex items-center justify-between p-3 bg-slate-50 border border-slate-200 rounded-xl">
+                    <div className="flex items-center justify-between p-3 bg-white border border-slate-200 rounded-xl shadow-2xs">
                       <div className="flex items-center gap-2.5 min-w-0 pr-2">
                         <ImageIcon size={18} className="text-emerald-600 flex-shrink-0" />
                         <span className="text-xs font-semibold text-slate-700 truncate">{screenshot.name}</span>
@@ -324,13 +323,13 @@ export default function SettleUpModal({
                       <button 
                         type="button" 
                         onClick={() => setScreenshot(null)}
-                        className="text-xs font-bold text-rose-500 hover:text-rose-700 p-1"
+                        className="text-xs font-bold text-rose-500 hover:text-rose-700 p-1 cursor-pointer"
                       >
                         Remove
                       </button>
                     </div>
                   ) : (
-                    <label className="flex flex-col items-center justify-center p-5 border-2 border-dashed border-slate-200 hover:border-emerald-400 rounded-2xl cursor-pointer bg-slate-50/50 hover:bg-emerald-50/30 transition-all">
+                    <label className="flex flex-col items-center justify-center p-4 sm:p-5 border-2 border-dashed border-slate-200 hover:border-emerald-400 rounded-2xl cursor-pointer bg-white hover:bg-emerald-50/30 transition-all shadow-2xs">
                       <Upload size={20} className="text-slate-400 mb-1.5" />
                       <span className="text-xs font-semibold text-slate-600">Click to upload screenshot</span>
                       <span className="text-[11px] text-slate-400 mt-0.5">PNG, JPG, JPEG up to 5MB</span>
@@ -345,40 +344,41 @@ export default function SettleUpModal({
                 </div>
 
                 {/* Notice */}
-                <div className="bg-slate-50 px-4 py-3 rounded-2xl border border-slate-100 flex items-start gap-2.5">
+                <div className="bg-white px-4 py-3 rounded-2xl border border-slate-200/80 flex items-start gap-2.5 shadow-2xs">
                   <Info size={16} className="text-slate-400 mt-0.5 flex-shrink-0" />
                   <p className="text-xs text-slate-500 leading-relaxed">
                     <strong className="font-semibold text-slate-700">Verification Required:</strong> Group balances will update automatically once the payee reviews and confirms receipt of this payment.
                   </p>
                 </div>
+              </div>
 
-                {/* Modal Footer Actions */}
-                <div className="pt-3 border-t border-slate-100 flex items-center justify-end gap-2.5">
-                  <button 
-                    type="button" 
-                    onClick={handleClose}
-                    className="px-5 py-2.5 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 text-xs font-bold transition-all"
-                  >
-                    Cancel
-                  </button>
-                  <button 
-                    type="submit" 
-                    disabled={loading}
-                    className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-xl text-xs font-bold shadow-sm transition-all hover:shadow-md active:scale-95 disabled:opacity-50 flex items-center gap-1.5"
-                  >
-                    {loading ? (
-                      <>
-                        <Loader size={14} className="animate-spin" /> Recording...
-                      </>
-                    ) : (
-                      <>
-                        <CheckCircle2 size={14} /> Record Payment
-                      </>
-                    )}
-                  </button>
-                </div>
-              </form>
-            </div>
+              {/* Sticky Pinned Footer Actions */}
+              <div className="px-5 py-3.5 sm:px-6 sm:py-4 border-t border-slate-100 bg-white flex items-center justify-end gap-2.5 flex-shrink-0 sticky bottom-0 z-10 shadow-[0_-4px_12px_rgba(0,0,0,0.03)]">
+                <button 
+                  type="button" 
+                  onClick={handleClose}
+                  className="px-4 sm:px-5 py-2.5 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 text-xs font-bold transition-all cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button 
+                  type="submit" 
+                  form="settle-up-form"
+                  disabled={loading}
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-5 sm:px-6 py-2.5 rounded-xl text-xs font-bold shadow-sm transition-all hover:shadow-md active:scale-95 disabled:opacity-50 flex items-center gap-1.5 cursor-pointer"
+                >
+                  {loading ? (
+                    <>
+                      <Loader size={14} className="animate-spin" /> Recording...
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle2 size={14} /> Record Payment
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
           </motion.div>
         </div>
       )}

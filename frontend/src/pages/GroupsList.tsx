@@ -230,7 +230,7 @@ export default function GroupsList() {
       <AnimatePresence>
         {isCreateModalOpen && (
           <motion.div 
-            className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center z-50 p-4"
+            className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center z-[100] p-4"
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             onClick={() => setIsCreateModalOpen(false)}
           >
@@ -278,7 +278,7 @@ export default function GroupsList() {
 
         {isJoinModalOpen && (
           <motion.div 
-            className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center z-50 p-4"
+            className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center z-[100] p-4"
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
             onClick={() => setIsJoinModalOpen(false)}
           >
