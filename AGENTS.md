@@ -103,9 +103,10 @@ expense-splitting-platform/
 1. **Authentication & Authorization**:
    - JWT authentication (`accessToken` stored in `localStorage`).
    - Group-level Role-Based Access Control (`ADMIN` vs `MEMBER`) enforced via `groupAccessMiddleware`.
-2. **Group Lifecycle & Cascade Deletion**:
-   - Admins and creators can delete groups (`DELETE /api/groups/:groupId`).
-   - Execution uses atomic `prisma.$transaction` cascading across expenses, payers, participants, edit histories, settlements, reminders, and memberships.
+2. **Group Lifecycle, Leave Group & Cascade Deletion**:
+   - Members can leave groups (`DELETE /api/groups/:groupId/leave`) guarded by a **Zero-Balance Invariant** (unsettled balances $|\text{balance}| \ge 100 \text{ paisa}$ are blocked until settled).
+   - If an ADMIN leaves, the system automatically promotes the next longest-standing member to ADMIN. If the sole member leaves, the group is automatically deleted.
+   - Admins and creators can delete groups (`DELETE /api/groups/:groupId`) with atomic `prisma.$transaction` cascading across expenses, payers, participants, edit histories, settlements, reminders, and memberships.
 3. **Security Hardening (Phase 1 & Phase 2)**:
    - **Global Security Headers (`helmet`)**: Protects against clickjacking, MIME sniffing, and disables `X-Powered-By`.
    - **Rate Limiting (`express-rate-limit`)**: Enforces 10 req/15min on auth endpoints, 20 req/15min on group invites, and 300 req/15min globally.
