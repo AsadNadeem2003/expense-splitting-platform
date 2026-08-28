@@ -121,5 +121,18 @@ npm run dev
 
 ---
 
+## 📚 Technical Documentation & Interview Guides
+
+| Document | Description |
+| :--- | :--- |
+| 📘 [**CTO Master Technical Handbook**](docs/INTERVIEW_CTO_MASTER_GUIDE.md) | Comprehensive engineering guide covering end-to-end topology, invariants, workflows, and 15+ CTO interview answers. |
+| 🛠️ [**Tech Stack & Requirements**](docs/TECH_STACK_REQUIREMENTS.md) | Granular inventory of all 25+ packages, runtimes, database systems, and infrastructure tools with architectural justifications. |
+| 🏗️ [**System Architecture**](docs/ARCHITECTURE.md) | Multi-tier topology, security perimeters, and request-response lifecycles. |
+| 🧠 [**Debt Simplification Engine**](docs/DEBT_SIMPLIFICATION_ENGINE.md) | Mathematical proof of the Conservation of Balances and greedy graph reduction algorithm. |
+| 🗄️ [**ERD & Data Models**](docs/ERD_DATA_MODELS.md) | PostgreSQL relational schema, indexes, and Prisma entity-relationship diagrams. |
+| 🔄 [**Sequence Diagrams**](docs/SEQUENCE_DIAGRAMS.md) | UML sequence diagrams for authentication, expenses, settlements, and leave group invariants. |
+
+---
+
 ## 📄 License
 This project is licensed under the MIT License.

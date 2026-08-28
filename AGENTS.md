@@ -58,6 +58,8 @@ expense-splitting-platform/
 ├── AGENTS.md                   # Engineering guide & Agent operating manual
 ├── .gitignore                  # Git ignore rules (protects backend/.env)
 ├── docs/                       # Architectural diagrams & specifications
+│   ├── INTERVIEW_CTO_MASTER_GUIDE.md # Comprehensive CTO Interview & Architectural Handbook
+│   ├── TECH_STACK_REQUIREMENTS.md # Complete inventory of all 25+ packages, tools & runtimes
 │   ├── ARCHITECTURE.md         # System Topology & Stack Specification
 │   ├── ERD_DATA_MODELS.md      # Database ERD & Schema Reference
 │   ├── DEBT_SIMPLIFICATION_ENGINE.md # Mathematical Foundations & Graph Algorithm
@@ -141,9 +143,10 @@ expense-splitting-platform/
    - Activity page tracks complete user financial history: Total Settled Amount, Shared Expense Volume, and Active Groups.
    - Real-time search and filter chips for `All`, `Expenses`, and `Settlements`.
    - Text overflow protection with `truncate` and `overflow-hidden` on all user-generated content.
-9. **Mobile-First Responsive Layout**:
-   - Floating mobile bottom navigation bar on screens `< 768px` for Dashboard, Groups, Quick Add, Activity, and Settings.
-   - Fluid card grids and responsive paddings across mobile, tablet, and desktop.
+9. **Mobile-First Responsive Layout & Sticky Viewport Modal Architecture**:
+    - Floating mobile bottom navigation bar on screens `< 768px` for Dashboard, Groups, Quick Add, Activity, and Settings.
+    - **Pinned Sticky Modal Viewport**: Modal footers (e.g. "Record Payment", "Save Expense") are pinned to the bottom of the viewport with `z-[100]` and sticky headers at the top, while form fields and screenshot uploads scroll freely inside an independent flex container. This guarantees action buttons are never pushed off-screen or obscured by mobile navigation bars.
+    - Responsive 3-column horizontal analytics stat row on Activity page and fluid card grids across mobile, tablet, and desktop.
 10. **Groups Page (Card Grid Layout)**:
     - Financial summary row (Active Groups count, You Are Owed, You Owe).
     - Responsive card grid with gradient-colored group avatars, creation dates, and member counts.
