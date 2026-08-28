@@ -160,7 +160,7 @@ const AppLayout = () => {
         />
 
         {/* Canvas Area */}
-        <div className="pt-24 px-4 sm:px-8 max-w-5xl mx-auto">
+        <div className="pt-24 sm:pt-28 px-3.5 sm:px-8 max-w-5xl mx-auto">
           <Outlet />
         </div>
       </main>

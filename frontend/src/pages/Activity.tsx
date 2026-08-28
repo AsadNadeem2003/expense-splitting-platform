@@ -157,57 +157,57 @@ const Activity = () => {
         </div>
       </section>
 
-      {/* Analytics Summary Cards */}
-      <section className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
-        <div className="bg-white rounded-3xl p-5 border border-slate-100 shadow-[0_8px_30px_rgb(15,23,42,0.04)]">
-          <div className="flex items-center gap-2 text-slate-400 mb-2">
-            <CreditCard size={16} className="text-emerald-500" />
-            <span className="text-[11px] font-bold uppercase tracking-wider">Total Settled</span>
+      {/* Analytics Summary Cards (Responsive 3-Column Grid) */}
+      <section className="grid grid-cols-3 gap-2 sm:gap-4 mb-6 sm:mb-8">
+        <div className="bg-white rounded-2xl sm:rounded-3xl p-3 sm:p-5 border border-slate-100 shadow-xs sm:shadow-[0_8px_30px_rgb(15,23,42,0.04)] flex flex-col justify-between">
+          <div className="flex items-center gap-1.5 text-slate-400 mb-1">
+            <CreditCard size={14} className="text-emerald-500 flex-shrink-0" />
+            <span className="text-[9px] sm:text-[11px] font-bold uppercase tracking-wider truncate">Settled</span>
           </div>
-          <h3 className="text-2xl font-extrabold text-slate-900 font-mono">
+          <h3 className="text-sm sm:text-2xl font-extrabold text-slate-900 font-mono truncate">
             Rs. {metrics.totalSettled}
           </h3>
-          <p className="text-xs text-slate-400 mt-1">Direct payments completed</p>
+          <p className="text-[10px] text-slate-400 mt-0.5 hidden sm:block">Direct payments completed</p>
         </div>
 
-        <div className="bg-white rounded-3xl p-5 border border-slate-100 shadow-[0_8px_30px_rgb(15,23,42,0.04)]">
-          <div className="flex items-center gap-2 text-slate-400 mb-2">
-            <Receipt size={16} className="text-blue-500" />
-            <span className="text-[11px] font-bold uppercase tracking-wider">Your Shared Volume</span>
+        <div className="bg-white rounded-2xl sm:rounded-3xl p-3 sm:p-5 border border-slate-100 shadow-xs sm:shadow-[0_8px_30px_rgb(15,23,42,0.04)] flex flex-col justify-between">
+          <div className="flex items-center gap-1.5 text-slate-400 mb-1">
+            <Receipt size={14} className="text-blue-500 flex-shrink-0" />
+            <span className="text-[9px] sm:text-[11px] font-bold uppercase tracking-wider truncate">Volume</span>
           </div>
-          <h3 className="text-2xl font-extrabold text-slate-900 font-mono">
+          <h3 className="text-sm sm:text-2xl font-extrabold text-slate-900 font-mono truncate">
             Rs. {metrics.totalExpenses}
           </h3>
-          <p className="text-xs text-slate-400 mt-1">Net financial participation</p>
+          <p className="text-[10px] text-slate-400 mt-0.5 hidden sm:block">Net financial participation</p>
         </div>
 
-        <div className="bg-white rounded-3xl p-5 border border-slate-100 shadow-[0_8px_30px_rgb(15,23,42,0.04)]">
-          <div className="flex items-center gap-2 text-slate-400 mb-2">
-            <Layers size={16} className="text-violet-500" />
-            <span className="text-[11px] font-bold uppercase tracking-wider">Active Involvements</span>
+        <div className="bg-white rounded-2xl sm:rounded-3xl p-3 sm:p-5 border border-slate-100 shadow-xs sm:shadow-[0_8px_30px_rgb(15,23,42,0.04)] flex flex-col justify-between">
+          <div className="flex items-center gap-1.5 text-slate-400 mb-1">
+            <Layers size={14} className="text-violet-500 flex-shrink-0" />
+            <span className="text-[9px] sm:text-[11px] font-bold uppercase tracking-wider truncate">Groups</span>
           </div>
-          <h3 className="text-2xl font-extrabold text-slate-900">
+          <h3 className="text-sm sm:text-2xl font-extrabold text-slate-900 truncate">
             {metrics.activeGroupsCount} {metrics.activeGroupsCount === 1 ? 'Group' : 'Groups'}
           </h3>
-          <p className="text-xs text-slate-400 mt-1">{metrics.totalCount} total audit transactions</p>
+          <p className="text-[10px] text-slate-400 mt-0.5 hidden sm:block">{metrics.totalCount} audit transactions</p>
         </div>
       </section>
 
       {/* Filter and Search Bar */}
-      <section className="bg-white rounded-3xl p-4 border border-slate-100 shadow-[0_8px_30px_rgb(15,23,42,0.04)] mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <section className="bg-white rounded-2xl sm:rounded-3xl p-3.5 sm:p-4 border border-slate-100 shadow-xs sm:shadow-[0_8px_30px_rgb(15,23,42,0.04)] mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
         {/* Filter Chips */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0">
+        <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto pb-1 sm:pb-0 scrollbar-none flex-shrink-0">
           {(['ALL', 'EXPENSE', 'SETTLEMENT'] as const).map(type => (
             <button
               key={type}
               onClick={() => setFilterType(type)}
-              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
+              className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
                 filterType === type
-                  ? 'bg-blue-600 text-white shadow-sm'
+                  ? 'bg-blue-600 text-white shadow-xs'
                   : 'bg-slate-50 text-slate-600 hover:bg-slate-100'
               }`}
             >
-              {type === 'ALL' ? 'All Transactions' : type === 'EXPENSE' ? 'Expenses' : 'Settlements'}
+              {type === 'ALL' ? 'All' : type === 'EXPENSE' ? 'Expenses' : 'Settlements'}
             </button>
           ))}
         </div>
