@@ -15,6 +15,22 @@ import ExpenseDetailModal from '../components/expenses/ExpenseDetailModal';
 import AlgorithmExplainerModal from '../components/modals/AlgorithmExplainerModal';
 import './GroupDetails.css';
 
+const getUploadUrl = (url?: string | null) => {
+  if (!url) return '';
+  if (url.startsWith('http://') || url.startsWith('https://')) return url;
+  
+  if (typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1')) {
+    return `http://localhost:4000${url.startsWith('/') ? '' : '/'}${url}`;
+  }
+  
+  // In production: route through /api/uploads so Nginx proxy to backend works seamlessly
+  const cleanPath = url.startsWith('/') ? url : `/${url}`;
+  if (cleanPath.startsWith('/uploads')) {
+    return `/api${cleanPath}`;
+  }
+  return cleanPath;
+};
+
 export default function GroupDetails() {
   const { groupId } = useParams();
   const navigate = useNavigate();
@@ -321,12 +337,18 @@ export default function GroupDetails() {
                     {new Date(s.createdAt).toLocaleString()}
                   </p>
                   {s.screenshotUrl && (
-                    <a href={`http://localhost:4000${s.screenshotUrl}`} target="_blank" rel="noreferrer" className="inline-block mt-2">
+                    <a href={getUploadUrl(s.screenshotUrl)} target="_blank" rel="noreferrer" className="inline-block mt-2">
                       <img 
-                        src={`http://localhost:4000${s.screenshotUrl}`} 
+                        src={getUploadUrl(s.screenshotUrl)} 
                         alt="Payment Screenshot" 
                         className="max-h-24 rounded-lg border border-slate-200 object-cover hover:opacity-90 transition-opacity" 
                         title="Click to view full size"
+                        onError={(e) => {
+                          const target = e.currentTarget;
+                          if (s.screenshotUrl && target.src.includes('/api/uploads')) {
+                            target.src = s.screenshotUrl;
+                          }
+                        }}
                       />
                     </a>
                   )}

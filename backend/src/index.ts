@@ -69,6 +69,7 @@ app.use('/api/expenses', expenseRoutes);
 app.use('/api/settlements', settlementRoutes);
 
 app.use('/uploads', express.static('public/uploads'));
+app.use('/api/uploads', express.static('public/uploads'));
 
 app.get('/health', (req, res) => {
   res.status(200).json({ status: 'UP', message: 'SplitEase Engine active', env: process.env.NODE_ENV || 'development' });
